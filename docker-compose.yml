@@ -1,0 +1,38 @@
+services:
+  nginx:
+    image: webdevops/nginx:alpine
+    container_name: simcuti_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/app
+      - ./docker/nginx/default.conf:/opt/docker/etc/nginx/vhost.conf
+    depends_on:
+      - php
+    restart: unless-stopped
+    networks:
+      - simcuti
+
+  php:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: simcuti_php
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_DISPLAY_ERRORS=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    restart: unless-stopped
+    networks:
+      - simcuti
+
+networks:
+  simcuti:
+    driver: bridge
