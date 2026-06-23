@@ -6,7 +6,6 @@ use App\Mail\TwoFactorCodeMail;
 use App\Services\SupabaseService;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
@@ -27,9 +26,6 @@ class SupabaseAuth
         $accessToken = Session::get('supabase_access_token');
 
         if (!$userId || !$accessToken) {
-            if ($this->restoreFromRememberCookie($request)) {
-                return $next($request);
-            }
             return redirect()->route('login')->withErrors(['email' => 'Silakan login terlebih dahulu.']);
         }
 
@@ -50,27 +46,6 @@ class SupabaseAuth
 
         Session::flush();
         return redirect()->route('login')->withErrors(['email' => 'Sesi Anda telah berakhir. Silakan login kembali.']);
-    }
-
-    protected function restoreFromRememberCookie(Request $request): bool
-    {
-        $cookieValue = $request->cookie('remember_me');
-        if (!$cookieValue) {
-            return false;
-        }
-
-        try {
-            $data = decrypt($cookieValue);
-        } catch (\Exception) {
-            return false;
-        }
-
-        $refreshToken = $data['refresh_token'] ?? null;
-        if (!$refreshToken) {
-            return false;
-        }
-
-        return $this->tryRefreshToken($refreshToken);
     }
 
     protected function tryRefreshToken(string $refreshToken): bool
@@ -107,22 +82,27 @@ class SupabaseAuth
             $photoUrl = $this->supabase->getSignedUrl($bucket, $profile['profile_photo_url'], 604800);
         }
         Session::put('profile_photo_url', $photoUrl);
-        Session::put('2fa_required', true);
-        Session::put('2fa_verified', false);
 
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $this->supabase->update('two_factor_codes', ['user_id' => $user['id'], 'used' => 'false'], ['used' => true], true);
-        $this->supabase->insert('two_factor_codes', [
-            'user_id' => $user['id'],
-            'kode' => $code,
-            'used' => false,
-            'expires_at' => now()->addMinutes(5)->toIso8601String(),
-        ], true);
+        // Check if 2FA is enabled for this user (respects profile setting)
+        $twoFactorEnabled = $profile['two_factor_enabled'] ?? false;
+        Session::put('2fa_required', $twoFactorEnabled);
+        Session::put('2fa_verified', !$twoFactorEnabled);
 
-        try {
-            Mail::to($user['email'] ?? '')->send(new TwoFactorCodeMail($code, $profile['full_name']));
-        } catch (\Exception $e) {
-            Log::error('Failed to send 2FA email (remember cookie): ' . $e->getMessage());
+        if ($twoFactorEnabled) {
+            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $this->supabase->update('two_factor_codes', ['user_id' => $user['id'], 'used' => 'false'], ['used' => true], true);
+            $this->supabase->insert('two_factor_codes', [
+                'user_id' => $user['id'],
+                'kode' => $code,
+                'used' => false,
+                'expires_at' => now()->addMinutes(10)->toIso8601String(),
+            ], true);
+
+            try {
+                Mail::to($user['email'] ?? '')->send(new TwoFactorCodeMail($code, $profile['full_name']));
+            } catch (\Exception $e) {
+                Log::error('Failed to send 2FA email (token refresh): ' . $e->getMessage());
+            }
         }
 
         return true;

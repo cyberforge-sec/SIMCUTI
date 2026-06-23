@@ -36,6 +36,24 @@ class ActivityLogService
 
         // admin=true to bypass RLS for insert
         $this->supabase->insert('activity_logs', $data, true);
+
+        // Probabilistic cleanup: delete logs older than 90 days (~1 in 50 requests)
+        if (random_int(1, 50) === 1) {
+            $this->cleanupOldLogs();
+        }
+    }
+
+    /**
+     * Cleanup activity logs older than 90 days via Supabase RPC.
+     * Prevents unbounded table growth over time.
+     */
+    public function cleanupOldLogs(): void
+    {
+        try {
+            $this->supabase->rpc('cleanup_old_activity_logs', [], true);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Activity log cleanup failed: ' . $e->getMessage());
+        }
     }
 
     /**

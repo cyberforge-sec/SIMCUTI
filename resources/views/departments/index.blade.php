@@ -3,70 +3,128 @@
 @section('title', 'Departemen')
 
 @section('content')
-<div class="page-header d-flex justify-content-between align-items-center">
+<!-- Page Header -->
+<section class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-lg">
     <div>
-        <h1 class="page-title">Departemen</h1>
-        <p class="page-subtitle">Kelola data departemen perusahaan</p>
+        <h2 class="text-headline-lg font-headline-lg text-on-background flex items-center gap-sm">
+            <span class="material-symbols-outlined text-primary" style="font-size: 32px;">domain</span>
+            Departemen
+        </h2>
+        <p class="text-body-md font-body-md text-secondary mt-xs">Kelola departemen dalam organisasi</p>
     </div>
-    <a href="{{ route('departments.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>Tambah Departemen
+    <a href="{{ route('departments.create') }}" class="flex items-center gap-sm px-lg py-md bg-primary text-on-primary rounded-xl font-label-md shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 no-underline">
+        <span class="material-symbols-outlined">add</span>
+        Tambah Departemen
     </a>
-</div>
+</section>
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Kode</th>
-                        <th>Nama Departemen</th>
-                        <th>Manager</th>
-                        <th>Deskripsi</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($departments as $i => $dept)
-                    <tr>
-                        <td>{{ $i + 1 }}</td>
-                        <td><span class="badge bg-primary">{{ $dept['kode'] ?? '-' }}</span></td>
-                        <td><strong>{{ $dept['nama'] ?? '-' }}</strong></td>
-                        <td>{{ $dept['manager_name'] ?? '-' }}</td>
-                        <td>{{ Str::limit($dept['deskripsi'] ?? '-', 50) }}</td>
-                        <td>
-                            @if(!empty($dept['is_active']))
-                                <span class="badge bg-success">Aktif</span>
-                            @else
-                                <span class="badge bg-secondary">Nonaktif</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                <a href="{{ route('departments.edit', $dept['id']) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDept('{{ $dept['id'] }}', '{{ $dept['nama'] }}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="text-center py-4">
-                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                            <p class="mt-2 mb-0">Belum ada data departemen</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+<!-- Stats Overview -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-lg">
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">domain</span>
+        </div>
+        <div>
+            <p class="text-body-sm font-body-sm text-secondary">Total Departemen</p>
+            <p class="text-headline-md font-headline-md text-on-background">{{ count($departments) }}</p>
         </div>
     </div>
-</div>
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-lg">
+            <div class="w-14 h-14 bg-secondary-container rounded-full flex items-center justify-center text-on-secondary-container">
+                <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">verified_user</span>
+            </div>
+            <div>
+                <p class="text-body-sm font-body-sm text-secondary">Aktif</p>
+                <p class="text-headline-md font-headline-md text-on-background">{{ collect($departments)->where('is_active', true)->count() }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-lg">
+            <div class="w-14 h-14 bg-error-container/20 rounded-full flex items-center justify-center text-error">
+                <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">block</span>
+            </div>
+            <div>
+                <p class="text-body-sm font-body-sm text-secondary">Nonaktif</p>
+                <p class="text-headline-md font-headline-md text-on-background">{{ collect($departments)->where('is_active', false)->count() }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Table Container -->
+<section class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+    <div class="p-lg border-b border-outline-variant flex items-center justify-between">
+        <div class="flex items-center gap-md">
+            <h3 class="text-label-md font-label-md text-on-background">Daftar Departemen</h3>
+            <span class="px-2 py-1 bg-primary/10 text-primary text-label-sm rounded-full">{{ count($departments) }} data</span>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-surface-container-lowest text-secondary uppercase text-[11px] tracking-wider font-semibold">
+                    <th class="px-lg py-md border-b border-outline-variant w-16">No</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Kode</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Nama Departemen</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Manager</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Deskripsi</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Status</th>
+                    <th class="px-lg py-md border-b border-outline-variant text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @forelse($departments as $i => $dept)
+                <tr class="hover:bg-primary-container/5 transition-colors group">
+                    <td class="px-lg py-md text-body-sm font-body-sm text-secondary">{{ $i + 1 }}</td>
+                    <td class="px-lg py-md">
+                        <span class="px-3 py-1 bg-primary/10 text-primary text-label-sm font-label-sm rounded-full">{{ $dept['kode'] ?? '-' }}</span>
+                    </td>
+                    <td class="px-lg py-md">
+                        <span class="text-body-sm font-label-md text-on-background">{{ $dept['nama'] ?? '-' }}</span>
+                    </td>
+                    <td class="px-lg py-md text-body-sm font-body-sm text-on-surface-variant">{{ $dept['manager_name'] ?? '-' }}</td>
+                    <td class="px-lg py-md text-body-sm font-body-sm text-on-surface-variant">{{ Str::limit($dept['deskripsi'] ?? '-', 50) }}</td>
+                    <td class="px-lg py-md">
+                        @if(!empty($dept['is_active']))
+                            <span class="flex items-center gap-xs text-label-sm font-label-sm text-green-600">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                Aktif
+                            </span>
+                        @else
+                            <span class="flex items-center gap-xs text-label-sm font-label-sm text-error">
+                                <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                                Nonaktif
+                            </span>
+                        @endif
+                    </td>
+                    <td class="px-lg py-md">
+                        <div class="flex justify-center items-center gap-sm">
+                            <a href="{{ route('departments.edit', $dept['id']) }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:bg-primary-container/10 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+                            </a>
+                            <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:bg-error-container/20 hover:text-error transition-colors" onclick="deleteDept('{{ $dept['id'] }}', '{{ $dept['nama'] }}')">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7" class="px-lg py-12 text-center">
+                        <div class="flex flex-col items-center gap-md">
+                            <span class="material-symbols-outlined text-6xl text-on-surface-variant/30">inbox</span>
+                            <p class="text-body-md font-body-md text-on-surface-variant">Belum ada data departemen</p>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</section>
 @endsection
 
 @push('scripts')
@@ -92,7 +150,6 @@ function deleteDept(id, nama) {
                 Swal.fire('Berhasil!', 'Departemen berhasil dihapus.', 'success');
                 setTimeout(() => location.reload(), 1000);
             }).catch(() => {
-                // Redirect-based fallback
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/departments/${id}`;

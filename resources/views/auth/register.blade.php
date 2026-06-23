@@ -3,176 +3,182 @@
 @section('title', 'Registrasi')
 
 @section('content')
-<div class="auth-header">
-    <h1 class="auth-title">Buat Akun Baru</h1>
-    <p class="auth-subtitle">Daftar untuk menggunakan SIMCUTI</p>
+<!-- Header -->
+<div class="space-y-sm text-center">
+    <h2 class="font-headline-lg text-headline-lg text-on-background">Buat Akun Baru</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant">Daftar untuk menggunakan SIMCUTI</p>
 </div>
 
-<form action="{{ route('register.post') }}" method="POST" id="registerForm">
+<!-- Register Form -->
+<form action="{{ route('register.post') }}" method="POST" class="space-y-md mt-0" id="registerForm">
     @csrf
 
-    <div class="form-row">
-        <div class="form-group">
-            <label for="full_name" class="form-label">Nama Lengkap</label>
-            <div class="input-group">
-                <i class="input-icon bi bi-person"></i>
-                <input type="text"
-                       id="full_name"
-                       name="full_name"
-                       class="form-control"
-                       placeholder="Adiva Dwi Aprianto"
-                       value="{{ old('full_name') }}"
-                       required
-                       autofocus>
-            </div>
-            @error('full_name')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
+    <!-- Full Name -->
+    <div class="space-y-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="full_name">Nama Lengkap</label>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
+            <input class="w-full pl-[48px] pr-md py-md bg-white border border-outline-variant/60 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-body-md"
+                   id="full_name"
+                   name="full_name"
+                   value="{{ old('full_name') }}"
+                   placeholder="Adiva Dwi Aprianto"
+                   type="text"
+                   required
+                   autofocus>
         </div>
-
-        <div class="form-group">
-            <label for="email" class="form-label">Email</label>
-            <div class="input-group">
-                <i class="input-icon bi bi-envelope"></i>
-                <input type="email"
-                       id="email"
-                       name="email"
-                       class="form-control"
-                       placeholder="nama@perusahaan.com"
-                       value="{{ old('email') }}"
-                       required>
-            </div>
-            @error('email')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
-        </div>
+        @error('full_name')
+            <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
+        @enderror
     </div>
 
-    <div class="form-row">
-        <div class="form-group">
-            <label for="phone" class="form-label">Nomor Telepon</label>
-            <div class="input-group">
-                <i class="input-icon bi bi-phone"></i>
-                <input type="tel"
-                       id="phone"
-                       name="phone"
-                       class="form-control"
-                       placeholder="08123456789"
-                       value="{{ old('phone') }}"
-                       required>
-            </div>
-            @error('phone')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
+    <!-- Email -->
+    <div class="space-y-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="email">Email</label>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">mail</span>
+            <input class="w-full pl-[48px] pr-md py-md bg-white border border-outline-variant/60 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-body-md"
+                   id="email"
+                   name="email"
+                   value="{{ old('email') }}"
+                   placeholder="adiva@simcuti.com"
+                   type="email"
+                   required>
         </div>
-
-        <div class="form-group">
-            <label for="password" class="form-label">Password</label>
-            <div class="input-group">
-                <i class="input-icon bi bi-lock"></i>
-                <input type="password"
-                       id="password"
-                       name="password"
-                       class="form-control"
-                       placeholder="Masukkan password"
-                       required>
-                <div class="input-group-append">
-                    <button type="button"
-                            class="btn-toggle-password"
-                            onclick="togglePassword('password', this.querySelector('i'))">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                </div>
-            </div>
-            <small class="text-muted" style="font-size: 0.75rem;">
-                Min. 8 karakter, kombinasi huruf, angka, dan simbol
-            </small>
-            <div style="margin-top: 0.25rem;">
-                <div style="height: 4px; background: #E5E7EB; border-radius: 2px; overflow: hidden;">
-                    <div id="strength-bar" style="height: 100%; width: 0%; background: #E5E7EB; border-radius: 2px; transition: width 0.3s ease, background 0.3s ease;"></div>
-                </div>
-                <small id="strength-text" style="font-size: 0.7rem; color: #9CA3AF;"></small>
-            </div>
-            @error('password')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
-        </div>
+        @error('email')
+            <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
+        @enderror
     </div>
 
-    <div class="form-group">
-        <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
-        <div class="input-group">
-            <i class="input-icon bi bi-lock-fill"></i>
-            <input type="password"
+    <!-- Phone -->
+    <div class="space-y-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="phone">Nomor Telepon</label>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">phone</span>
+            <input class="w-full pl-[48px] pr-md py-md bg-white border border-outline-variant/60 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-body-md"
+                   id="phone"
+                   name="phone"
+                   value="{{ old('phone') }}"
+                   placeholder="08123456789"
+                   type="tel"
+                   required>
+        </div>
+        @error('phone')
+            <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <!-- Password -->
+    <div class="space-y-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="password">Password</label>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+            <input class="w-full pl-[48px] pr-[48px] py-md bg-white border border-outline-variant/60 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-body-md"
+                   id="password"
+                   name="password"
+                   placeholder="Masukkan password"
+                   type="password"
+                   required>
+            <button class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
+                    type="button"
+                    onclick="togglePassword('password', this)">visibility</button>
+        </div>
+        <!-- Password Strength -->
+        <div class="mt-1">
+            <div class="h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+                <div id="strength-bar" class="h-full w-0 bg-outline-variant/30 rounded-full transition-all duration-300"></div>
+            </div>
+            <small id="strength-text" class="text-xs text-outline mt-1 block"></small>
+        </div>
+        <small class="text-xs text-on-surface-variant/60 block mt-1">
+            Min. 8 karakter, kombinasi huruf, angka, dan simbol
+        </small>
+        @error('password')
+            <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="space-y-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="password_confirmation">Konfirmasi Password</label>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+            <input class="w-full pl-[48px] pr-[48px] py-md bg-white border border-outline-variant/60 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-body-md"
                    id="password_confirmation"
                    name="password_confirmation"
-                   class="form-control"
                    placeholder="Ulangi password"
+                   type="password"
                    required>
-            <div class="input-group-append">
-                <button type="button"
-                        class="btn-toggle-password"
-                        onclick="togglePassword('password_confirmation', this.querySelector('i'))">
-                    <i class="bi bi-eye"></i>
-                </button>
-            </div>
+            <button class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
+                    type="button"
+                    onclick="togglePassword('password_confirmation', this)">visibility</button>
         </div>
         @error('password_confirmation')
-            <small class="text-danger">{{ $message }}</small>
+            <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
         @enderror
     </div>
 
-    <div class="form-group">
-        <label for="captcha" class="form-label">Captcha</label>
-        <div class="captcha-row">
-            <div class="captcha-left">
-                <div class="captcha-container">
-                    <div class="captcha-image">
-                        <img src="{{ $captchaImage ?? '/captcha' }}" alt="Captcha" id="captchaImage">
-                    </div>
-                    <button type="button" class="btn-refresh-captcha" onclick="refreshCaptcha()" title="Refresh Captcha">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                </div>
+    <!-- Captcha -->
+    <div class="space-y-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="captcha">Captcha</label>
+        <div class="flex gap-md items-center">
+            <div class="h-[60px] bg-white border border-outline-variant/60 rounded-xl overflow-hidden flex items-center justify-center">
+                <img src="{{ $captchaImage ?? '/captcha' }}" alt="Captcha" id="captchaImage" class="h-full w-full object-contain">
             </div>
-            <div class="captcha-right">
-                <input type="text"
-                       id="captcha"
-                       name="captcha"
-                       class="form-control"
-                       style="padding-left: 1rem;"
-                       placeholder="Masukkan kode captcha"
-                       required
-                       autocomplete="off">
-            </div>
+            <button type="button"
+                    class="h-[60px] px-md bg-white border border-outline-variant/60 rounded-xl hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-95 flex items-center justify-center"
+                    onclick="refreshCaptcha()"
+                    title="Refresh Captcha">
+                <span class="material-symbols-outlined text-primary">refresh</span>
+            </button>
+        </div>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">verified_user</span>
+            <input class="w-full pl-[48px] pr-md py-md bg-white border border-outline-variant/60 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-body-md"
+                   id="captcha"
+                   name="captcha"
+                   placeholder="Masukkan kode captcha"
+                   type="text"
+                   required
+                   autocomplete="off">
         </div>
         @error('captcha')
-            <small class="text-danger">{{ $message }}</small>
+            <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
         @enderror
     </div>
 
-    <div class="form-check mb-2" style="font-size: 0.8125rem;">
-        <input type="checkbox" class="form-check-input" id="terms" name="terms" required style="margin-right: 0.5rem;">
-        <label class="form-check-label" for="terms">
-            Saya setuju dengan <a href="#" class="text-decoration-none">Syarat & Ketentuan</a>
+    <!-- Terms -->
+    <div class="flex items-center gap-md">
+        <input type="checkbox"
+               id="terms"
+               name="terms"
+               required
+               class="w-5 h-5 border-2 border-outline-variant/60 rounded cursor-pointer hover:border-primary transition-colors">
+        <label for="terms" class="font-body-sm text-body-sm text-on-surface-variant cursor-pointer">
+            Saya setuju dengan <a href="#" class="text-primary font-semibold hover:underline">Syarat & Ketentuan</a>
         </label>
-        @error('terms')
-            <br><small class="text-danger">{{ $message }}</small>
-        @enderror
     </div>
+    @error('terms')
+        <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
+    @enderror
 
-    <button type="submit" class="auth-btn-primary" id="btnSubmit">
-        <i class="bi bi-person-plus" style="margin-right: 0.5rem;"></i>
+    <!-- Submit Button -->
+    <button type="submit"
+            id="btnSubmit"
+            class="btn-gradient w-full py-md text-on-primary rounded-xl font-label-md text-label-md shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300">
         <span id="btnText">Daftar Sekarang</span>
-        <span id="btnLoading" style="display: none;">
-            <i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite; margin-right: 0.5rem;"></i>
+        <span id="btnLoading" style="display: none;" class="flex items-center justify-center gap-sm">
+            <span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">refresh</span>
             Memproses...
         </span>
     </button>
 </form>
 
-<div class="auth-footer">
-    Sudah punya akun? <a href="{{ route('login') }}">Login Sekarang</a>
+<!-- Footer Link -->
+<div class="text-center">
+    <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Sudah punya akun? <a class="text-primary font-semibold hover:underline" href="{{ route('login') }}">Login Sekarang</a>
+    </p>
 </div>
 @endsection
 
@@ -193,12 +199,12 @@
         if (password.match(/[^a-zA-Z0-9]/)) strength++;
 
         const levels = [
-            { width: '0%', color: '#E5E7EB', text: '' },
-            { width: '20%', color: '#EF4444', text: 'Sangat Lemah' },
-            { width: '40%', color: '#F97316', text: 'Lemah' },
-            { width: '60%', color: '#EAB308', text: 'Sedang' },
-            { width: '80%', color: '#22C55E', text: 'Kuat' },
-            { width: '100%', color: '#16A34A', text: 'Sangat Kuat' },
+            { width: '0%', color: '#c5c5d7', text: '' },
+            { width: '20%', color: '#ef4444', text: 'Sangat Lemah' },
+            { width: '40%', color: '#f97316', text: 'Lemah' },
+            { width: '60%', color: '#eab308', text: 'Sedang' },
+            { width: '80%', color: '#22c55e', text: 'Kuat' },
+            { width: '100%', color: '#16a34a', text: 'Sangat Kuat' },
         ];
 
         const level = password.length === 0 ? levels[0] : levels[strength];
@@ -216,7 +222,7 @@
         btn.style.opacity = '0.7';
         btn.style.cursor = 'not-allowed';
         btnText.style.display = 'none';
-        btnLoading.style.display = 'inline';
+        btnLoading.style.display = 'flex';
     });
 </script>
 @endpush

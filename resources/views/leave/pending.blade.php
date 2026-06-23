@@ -3,72 +3,148 @@
 @section('title', 'Perlu Persetujuan')
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">Perlu Persetujuan</h1>
-    <p class="page-subtitle">Daftar pengajuan cuti yang menunggu keputusan Anda</p>
-</div>
+<div class="space-y-lg">
+    <!-- Page Header -->
+    <section class="flex flex-col md:flex-row md:items-center justify-between gap-md">
+        <div>
+            <h2 class="text-headline-lg font-headline-lg text-on-background">Perlu Persetujuan</h2>
+            <p class="text-body-md font-body-md text-secondary">Daftar pengajuan cuti yang menunggu keputusan Anda</p>
+        </div>
+    </section>
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
+    <!-- Stats -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-lg">
+        <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">pending_actions</span>
+            </div>
+            <div>
+                <p class="text-body-sm font-body-sm text-secondary">Menunggu</p>
+                <p class="text-headline-md font-headline-md text-on-background">{{ count($pendingLeaves ?? []) }}</p>
+            </div>
+        </div>
+        <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+            <div class="w-14 h-14 bg-secondary-container rounded-full flex items-center justify-center text-on-secondary-container">
+                <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">event</span>
+            </div>
+            <div>
+                <p class="text-body-sm font-body-sm text-secondary">Total Hari Cuti</p>
+                <p class="text-headline-md font-headline-md text-on-background">
+                    {{ collect($pendingLeaves ?? [])->sum('total_hari') }}
+                </p>
+            </div>
+        </div>
+        <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+            <div class="w-14 h-14 bg-error-container/20 rounded-full flex items-center justify-center text-error">
+                <span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">priority_high</span>
+            </div>
+            <div>
+                <p class="text-body-sm font-body-sm text-secondary">Urgent</p>
+                <p class="text-headline-md font-headline-md text-on-background">
+                    {{ collect($pendingLeaves ?? [])->where('is_urgent', true)->count() }}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Table Container -->
+    <section class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="p-lg border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-md bg-surface-container-low/50">
+            <div class="flex items-center gap-md">
+                <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[20px]">assignment</span>
+                </div>
+                <h3 class="text-label-md font-label-md text-on-background">Daftar Pengajuan</h3>
+                <div class="px-2 py-1 bg-surface-container-highest text-secondary text-label-sm font-label-sm rounded-lg">
+                    {{ count($pendingLeaves ?? []) }} pengajuan
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Karyawan</th>
-                        <th>Jenis Cuti</th>
-                        <th>Tanggal</th>
-                        <th>Hari</th>
-                        <th>Diajukan</th>
-                        <th>Aksi</th>
+                    <tr class="bg-surface-container-lowest text-secondary uppercase text-[11px] tracking-wider font-semibold">
+                        <th class="px-lg py-md border-b border-outline-variant w-16">No</th>
+                        <th class="px-lg py-md border-b border-outline-variant">Karyawan</th>
+                        <th class="px-lg py-md border-b border-outline-variant">Jenis Cuti</th>
+                        <th class="px-lg py-md border-b border-outline-variant">Tanggal</th>
+                        <th class="px-lg py-md border-b border-outline-variant">Hari</th>
+                        <th class="px-lg py-md border-b border-outline-variant">Diajukan</th>
+                        <th class="px-lg py-md border-b border-outline-variant text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-outline-variant">
                     @forelse($pendingLeaves as $i => $leave)
-                    <tr id="row-{{ $leave['id'] }}">
-                        <td>{{ $i + 1 }}</td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <img src="{{ $leave['user']['profile_photo_url'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($leave['user']['full_name'] ?? 'U') }}"
-                                     alt="" class="rounded-circle" width="32" height="32" style="object-fit:cover;">
-                                <strong>{{ $leave['user']['full_name'] ?? '-' }}</strong>
+                    <tr class="hover:bg-primary-container/5 transition-colors group" id="row-{{ $leave['id'] }}">
+                        <td class="px-lg py-md text-body-sm font-body-sm text-secondary">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                        <td class="px-lg py-md">
+                            <div class="flex items-center gap-md">
+                                @php
+                                    $initials = collect(explode(' ', $leave['user']['full_name'] ?? 'U'))
+                                        ->take(2)
+                                        ->map(fn($n) => strtoupper(substr($n, 0, 1)))
+                                        ->join('');
+                                    $avatarColors = [
+                                        'bg-primary-fixed text-primary',
+                                        'bg-secondary-fixed text-on-secondary-fixed-variant',
+                                        'bg-surface-container-highest text-secondary',
+                                    ];
+                                    $colorIndex = $i % 3;
+                                @endphp
+                                <div class="w-8 h-8 rounded-full {{ $avatarColors[$colorIndex] }} flex items-center justify-center font-bold text-xs">
+                                    {{ $initials }}
+                                </div>
+                                <span class="text-body-sm font-label-md text-on-background">{{ $leave['user']['full_name'] ?? '-' }}</span>
                             </div>
                         </td>
-                        <td>
-                            <span class="badge bg-info me-1">{{ $leave['leave_type']['kode'] ?? '-' }}</span>
-                            {{ $leave['leave_type']['nama'] ?? '-' }}
+                        <td class="px-lg py-md">
+                            <div class="flex flex-col">
+                                <span class="px-2 py-1 bg-secondary-container text-on-secondary-container text-label-sm font-label-sm rounded-lg inline-block w-fit">
+                                    {{ $leave['leave_type']['kode'] ?? '-' }}
+                                </span>
+                                <span class="text-body-sm font-body-sm text-secondary mt-xs">{{ $leave['leave_type']['nama'] ?? '-' }}</span>
+                            </div>
                         </td>
-                        <td>
+                        <td class="px-lg py-md text-body-sm font-body-sm text-on-surface-variant">
                             {{ \Carbon\Carbon::parse($leave['tanggal_mulai'])->format('d M') }} - {{ \Carbon\Carbon::parse($leave['tanggal_selesai'])->format('d M Y') }}
                         </td>
-                        <td><span class="badge bg-primary">{{ $leave['total_hari'] ?? 0 }}</span></td>
-                        <td>{{ \Carbon\Carbon::parse($leave['created_at'])->diffForHumans() }}</td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                <a href="{{ route('leave.show', $leave['id']) }}" class="btn btn-sm btn-outline-primary" title="Detail">
-                                    <i class="bi bi-eye"></i>
+                        <td class="px-lg py-md">
+                            <span class="px-3 py-1 bg-primary/10 text-primary text-label-sm font-label-sm rounded-full">
+                                {{ $leave['total_hari'] ?? 0 }} hari
+                            </span>
+                        </td>
+                        <td class="px-lg py-md text-body-sm font-body-sm text-secondary">
+                            {{ \Carbon\Carbon::parse($leave['created_at'])->diffForHumans() }}
+                        </td>
+                        <td class="px-lg py-md">
+                            <div class="flex justify-center items-center gap-sm">
+                                <a href="{{ route('leave.show', $leave['id']) }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:bg-primary-container/10 hover:text-primary transition-colors" title="Detail">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-success" onclick="approveLeave('{{ $leave['id'] }}')" title="Setujui">
-                                    <i class="bi bi-check-circle"></i>
+                                <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:bg-green-500/10 hover:text-green-600 transition-colors" onclick="approveLeave('{{ $leave['id'] }}')" title="Setujui">
+                                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-danger" onclick="showRejectModal('{{ $leave['id'] }}')" title="Tolak">
-                                    <i class="bi bi-x-circle"></i>
+                                <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:bg-error-container/20 hover:text-error transition-colors" onclick="showRejectModal('{{ $leave['id'] }}')" title="Tolak">
+                                    <span class="material-symbols-outlined text-[20px]">cancel</span>
                                 </button>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4">
-                            <i class="bi bi-check-circle" style="font-size: 3rem; color: #10B981;"></i>
-                            <p class="mt-2 mb-0">Tidak ada pengajuan yang menunggu persetujuan</p>
+                        <td colspan="7" class="px-lg py-12 text-center">
+                            <div class="flex flex-col items-center gap-md">
+                                <span class="material-symbols-outlined text-6xl text-green-500/30">check_circle</span>
+                                <p class="text-body-md font-body-md text-on-surface-variant">Tidak ada pengajuan yang menunggu persetujuan</p>
+                            </div>
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 </div>
 
 <!-- Reject Modal -->
@@ -79,23 +155,24 @@
      style="display: none;">
     <div class="fixed inset-0 bg-black/50" @click="show = false"></div>
     <div x-show="show" x-transition
-         class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 z-10">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-border-light">
-            <h5 class="font-semibold text-lg text-dark">
-                <i class="bi bi-x-circle text-danger me-2"></i>Tolak Pengajuan
+         class="relative bg-surface rounded-2xl shadow-2xl w-full max-w-md mx-4 z-10 border border-outline-variant">
+        <div class="flex items-center justify-between px-lg py-md border-b border-outline-variant">
+            <h5 class="font-label-md text-label-md text-on-surface flex items-center gap-sm">
+                <span class="material-symbols-outlined text-error">cancel</span>Tolak Pengajuan
             </h5>
-            <button type="button" class="text-text-muted hover:text-dark bg-transparent border-none text-xl cursor-pointer" @click="show = false">&times;</button>
+            <button type="button" class="text-secondary hover:text-on-surface bg-transparent border-none text-xl cursor-pointer" @click="show = false">&times;</button>
         </div>
-        <div class="p-6">
-            <div class="mb-3">
-                <label for="rejectReason" class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                <textarea class="form-control" x-model="rejectReason" id="rejectReason" rows="3" minlength="10" required
-                          placeholder="Jelaskan alasan penolakan (minimal 10 karakter)..."></textarea>
-            </div>
+        <div class="p-lg">
+            <label for="rejectReason" class="block text-label-md font-label-md text-on-surface mb-sm">
+                Alasan Penolakan <span class="text-error">*</span>
+            </label>
+            <textarea x-model="rejectReason" id="rejectReason" rows="3" minlength="10" required
+                      placeholder="Jelaskan alasan penolakan (minimal 10 karakter)..."
+                      class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm"></textarea>
         </div>
-        <div class="flex justify-end gap-2 px-6 py-4 border-t border-border-light">
-            <button type="button" class="btn btn-secondary" @click="show = false">Batal</button>
-            <button type="button" class="btn btn-danger" @click="
+        <div class="flex justify-end gap-sm px-lg py-md border-t border-outline-variant">
+            <button type="button" class="px-lg py-md border border-outline-variant rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-all" @click="show = false">Batal</button>
+            <button type="button" class="px-lg py-md bg-error text-on-error rounded-xl font-label-md text-label-md hover:opacity-90 transition-all" @click="
                 if (rejectReason.length < 10) {
                     Swal.fire('Peringatan', 'Alasan penolakan minimal 10 karakter.', 'warning');
                     return;
@@ -120,7 +197,6 @@
         </div>
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script>
@@ -158,3 +234,4 @@ function showRejectModal(id) {
 }
 </script>
 @endpush
+@endsection

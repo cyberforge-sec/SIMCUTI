@@ -12,7 +12,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-pencil-square me-2"></i> Form Edit Pengajuan
+                <span class="material-symbols-outlined-square me-2">edit</span> Form Edit Pengajuan
             </div>
             <div class="card-body">
                 <form action="{{ route('leave.update', $leave['id']) }}" method="POST" enctype="multipart/form-data">
@@ -60,10 +60,10 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Simpan Perubahan
+                            <span class="material-symbols-outlined me-2">check_circle</span>Simpan Perubahan
                         </button>
                         <a href="{{ route('leave.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle me-2"></i>Batal
+                            <span class="material-symbols-outlined me-2">cancel</span>Batal
                         </a>
                     </div>
                 </form>

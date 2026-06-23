@@ -65,21 +65,21 @@ class RegisterController extends Controller
         ]);
 
         if (!$result['success']) {
-            $error = $result['error'];
-            if (str_contains(strtolower($error), 'already')) {
-                return back()->withErrors(['email' => 'Email sudah terdaftar.'])->withInput();
-            }
-            return back()->withErrors(['email' => 'Registrasi gagal: ' . $error])->withInput();
+            // Log the actual error for debugging but show generic message to user
+            // to prevent email enumeration attacks
+            Log::warning('Registration failed: ' . $result['error']);
+            return back()->withErrors(['email' => 'Registrasi gagal. Silakan coba lagi atau hubungi administrator.'])->withInput();
         }
 
         $authData = $result['data'];
         $userId = $authData['user']['id'] ?? null;
 
         if (!$userId) {
-            return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan cek email untuk verifikasi, lalu login.');
+            return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan cek email untuk verifikasi.');
         }
 
         // Update profile record (handle_new_user trigger already created it with basic data)
+        // New self-registered accounts are active so they can login immediately
         $profileData = [
             'phone' => $request->phone,
             'role' => 'karyawan',
@@ -111,6 +111,6 @@ class RegisterController extends Controller
 
         $this->activityLog->log('register', "User baru terdaftar: {$request->email}", 'profile', $userId, $userId);
 
-        return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan cek email untuk verifikasi, lalu login.');
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan cek email untuk verifikasi.');
     }
 }

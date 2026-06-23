@@ -2,128 +2,75 @@
 
 @section('title', 'Verifikasi 2FA')
 
-@push('styles')
-<style>
-    .form-group {
-        margin-bottom: 1.25rem;
-    }
-    .form-group .form-label {
-        font-size: 0.9375rem;
-        margin-bottom: 0.5rem;
-    }
-    .form-group .form-control {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-        font-size: 1rem;
-        border-radius: 0.5rem;
-    }
-    .auth-header {
-        margin-bottom: 1.5rem;
-    }
-    .auth-title {
-        font-size: 1.5rem;
-    }
-    .auth-subtitle {
-        font-size: 1rem;
-    }
-    .btn-verify {
-        width: 100%;
-        padding: 0.625rem;
-        background: var(--color-primary, #4F46E5);
-        color: white;
-        border: none;
-        border-radius: 0.75rem;
-        font-weight: 600;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .btn-verify:hover {
-        background: var(--color-primary-dark, #4338CA);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-    }
-    .btn-verify:disabled {
-        transform: none;
-        box-shadow: none;
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-    .resend-btn {
-        color: var(--color-primary, #4F46E5);
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 0.9375rem;
-        padding: 0;
-    }
-    .resend-btn:hover {
-        text-decoration: underline;
-    }
-</style>
-@endpush
-
 @section('content')
-<div class="auth-header">
-    <h1 class="auth-title">Verifikasi Dua Faktor</h1>
-    <p class="auth-subtitle">Masukkan kode 6 digit yang dikirim ke email Anda</p>
+<!-- Header -->
+<div class="space-y-sm text-center">
+    <h2 class="font-headline-lg text-headline-lg text-on-background">Verifikasi Dua Faktor</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant">Masukkan kode 6 digit yang dikirim ke email Anda</p>
 </div>
 
 @if(session('success'))
-    <div class="alert alert-success">
-        <i class="bi bi-check-circle me-2"></i> {{ session('success') }}
+    <div class="p-md bg-green-50 border border-green-200 rounded-xl text-green-700 text-body-sm">
+        <span class="material-symbols-outlined text-green-600 align-middle mr-1" style="font-size: 18px;">check_circle</span>
+        {{ session('success') }}
     </div>
 @endif
 
-<form action="{{ route('2fa.verify') }}" method="POST" id="twoFactorForm">
+<!-- Form -->
+<form action="{{ route('2fa.verify') }}" method="POST" class="space-y-lg mt-0" id="twoFactorForm">
     @csrf
 
-    <div class="form-group">
-        <label for="code" class="form-label">Kode Verifikasi</label>
-        <div class="input-group">
-            <i class="input-icon bi bi-shield-lock"></i>
-            <input type="text"
+    <!-- Code Input -->
+    <div class="space-y-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="code">Kode Verifikasi</label>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">shield</span>
+            <input class="w-full pl-[48px] pr-md py-md bg-white border border-outline-variant/60 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-body-md text-center text-2xl tracking-widest"
                    id="code"
                    name="code"
-                   class="form-control"
                    placeholder="000000"
+                   type="text"
                    maxlength="6"
                    pattern="[0-9]{6}"
-                   style="font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem;"
                    required
                    autofocus
                    autocomplete="off">
         </div>
         @error('code')
-            <small class="text-danger">{{ $message }}</small>
+            <div class="text-error text-label-sm ml-1 mt-1">{{ $message }}</div>
         @enderror
     </div>
 
-    <button type="submit" class="btn-verify" id="btnVerify">
-        <span id="btnText">
-            <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
-            Verifikasi
-        </span>
-        <span id="btnLoading" style="display: none;">
-            <i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite; margin-right: 0.5rem;"></i>
+    <!-- Submit Button -->
+    <button type="submit"
+            id="btnVerify"
+            class="btn-gradient w-full py-md text-on-primary rounded-xl font-label-md text-label-md shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300">
+        <span id="btnText">Verifikasi</span>
+        <span id="btnLoading" style="display: none;" class="flex items-center justify-center gap-sm">
+            <span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">refresh</span>
             Memproses...
         </span>
     </button>
 </form>
 
-<div class="d-flex justify-content-between align-items-center mt-3">
-    <form action="{{ route('2fa.resend') }}" method="POST">
+<!-- Footer Actions -->
+<div class="flex justify-between items-center mt-md">
+    <form action="{{ route('2fa.resend') }}" method="POST" class="inline">
         @csrf
-        <button type="submit" class="resend-btn">
-            <i class="bi bi-arrow-clockwise" style="margin-right: 0.25rem;"></i> Kirim Ulang Kode
+        <button type="submit" class="font-body-sm text-body-sm text-primary hover:underline">
+            <span class="material-symbols-outlined align-middle mr-1" style="font-size: 16px;">refresh</span>
+            Kirim Ulang Kode
         </button>
     </form>
-    <a href="{{ route('logout') }}" class="text-decoration-none text-muted" style="font-size: 0.9375rem;"
+    <a href="{{ route('logout') }}"
+       class="font-body-sm text-body-sm text-on-surface-variant hover:text-error transition-colors"
        onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
-        <i class="bi bi-box-arrow-right" style="margin-right: 0.25rem;"></i> Logout
+        <span class="material-symbols-outlined align-middle mr-1" style="font-size: 16px;">logout</span>
+        Logout
     </a>
     <form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -133,8 +80,7 @@
         const btnLoading = document.getElementById('btnLoading');
         btn.disabled = true;
         btnText.style.display = 'none';
-        btnLoading.style.display = 'inline';
+        btnLoading.style.display = 'flex';
     });
 </script>
 @endpush
-@endsection

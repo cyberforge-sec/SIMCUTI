@@ -100,6 +100,34 @@ CREATE INDEX idx_leave_requests_status ON leave_requests(status);
 CREATE INDEX idx_leave_requests_dates ON leave_requests(tanggal_mulai, tanggal_selesai);
 CREATE INDEX idx_leave_requests_created ON leave_requests(created_at DESC);
 
+-- Prevent overlapping leave dates (race condition protection)
+-- This trigger enforces date overlap prevention at the database level,
+-- closing the TOCTOU race condition that exists in PHP application code.
+CREATE OR REPLACE FUNCTION prevent_overlapping_leave()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status IN ('pending', 'disetujui') THEN
+        IF EXISTS (
+            SELECT 1 FROM leave_requests
+            WHERE user_id = NEW.user_id
+              AND id != NEW.id
+              AND status IN ('pending', 'disetujui')
+              AND tanggal_mulai <= NEW.tanggal_selesai
+              AND tanggal_selesai >= NEW.tanggal_mulai
+        ) THEN
+            RAISE EXCEPTION 'Tanggal cuti tumpang tindih dengan pengajuan lain yang sudah ada';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE CONSTRAINT TRIGGER prevent_overlapping_leave_trigger
+    AFTER INSERT OR UPDATE ON leave_requests
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW
+    EXECUTE FUNCTION prevent_overlapping_leave();
+
 -- =============================================
 -- 5. LEAVE BALANCES TABLE
 -- =============================================

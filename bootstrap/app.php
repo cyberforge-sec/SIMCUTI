@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SupabaseAuth;
 use App\Http\Middleware\TwoFactorMiddleware;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             '2fa' => TwoFactorMiddleware::class,
         ]);
+
+        // Add security headers to all web responses
+        $middleware->web(append: [
+            SecurityHeaders::class,
+        ]);
+
+        // Trust Cloudflare Tunnel proxy — reads X-Forwarded-Proto, X-Forwarded-For, etc.
+        // Cloudflare Tunnel forwards traffic from edge to origin with these headers.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -20,7 +20,19 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        $departments = $this->supabase->select('departments', 'id,nama', ['is_active' => 'true']);
+        // Department scoping: managers only see their own department in the filter dropdown
+        $role = Session::get('user_role');
+        $userDepartmentId = Session::get('user_department_id');
+
+        if ($role === 'manager' && $userDepartmentId) {
+            $departments = $this->supabase->select('departments', 'id,nama', [
+                'is_active' => 'true',
+                'id' => $userDepartmentId,
+            ]);
+        } else {
+            $departments = $this->supabase->select('departments', 'id,nama', ['is_active' => 'true']);
+        }
+
         $leaveTypes = $this->supabase->select('leave_types', 'id,nama', ['is_active' => 'true']);
 
         $reports = $this->fetchFilteredReports($request);
@@ -63,25 +75,55 @@ class ReportController extends Controller
     protected function buildFilters(Request $request): array
     {
         $filters = [];
+        $role = Session::get('user_role');
+        $userDepartmentId = Session::get('user_department_id');
 
-        if ($request->filled('status')) {
+        // Whitelist valid status values to prevent PostgREST filter injection
+        $allowedStatuses = ['pending', 'disetujui', 'ditolak', 'dibatalkan'];
+        if ($request->filled('status') && in_array($request->status, $allowedStatuses, true)) {
             $filters['status'] = 'eq.' . $request->status;
         }
-        if ($request->filled('department_id')) {
-            $deptUsers = $this->supabase->select('profiles', 'id', ['department_id' => $request->department_id]);
+
+        // Department scoping: enforce department boundary based on role
+        $effectiveDepartmentId = null;
+        if ($role === 'manager') {
+            // Managers can ONLY see their own department — ignore query string parameter
+            $effectiveDepartmentId = $userDepartmentId;
+        } elseif ($role === 'admin' && $request->filled('department_id')) {
+            // Admins can filter by any department, but validate UUID format
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $request->department_id)) {
+                $effectiveDepartmentId = $request->department_id;
+            }
+        }
+
+        if ($effectiveDepartmentId) {
+            // Use admin key to look up department members (profiles RLS may block anon key)
+            $deptUsers = $this->supabase->selectAdmin('profiles', 'id', ['department_id' => $effectiveDepartmentId]);
             $userIds = array_column($deptUsers, 'id');
             if (!empty($userIds)) {
                 $filters['user_id'] = $userIds;
+            } else {
+                // Department exists but has no members — return empty result set
+                $filters['user_id'] = ['00000000-0000-0000-0000-000000000000'];
             }
         }
         if ($request->filled('leave_type_id')) {
-            $filters['leave_type_id'] = 'eq.' . $request->leave_type_id;
+            // Validate UUID format to prevent injection
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $request->leave_type_id)) {
+                $filters['leave_type_id'] = 'eq.' . $request->leave_type_id;
+            }
         }
         if ($request->filled('date_from')) {
-            $filters['tanggal_mulai'] = 'gte.' . $request->date_from;
+            // Validate date format YYYY-MM-DD to prevent injection
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->date_from)) {
+                $filters['tanggal_mulai'] = 'gte.' . $request->date_from;
+            }
         }
         if ($request->filled('date_to')) {
-            $filters['tanggal_selesai'] = 'lte.' . $request->date_to;
+            // Validate date format YYYY-MM-DD to prevent injection
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->date_to)) {
+                $filters['tanggal_selesai'] = 'lte.' . $request->date_to;
+            }
         }
 
         return $filters;
@@ -127,6 +169,19 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * Sanitize a field value for CSV export to prevent formula injection.
+     * Prefixes values starting with =, +, -, @, \t, \r with a single quote.
+     */
+    protected function sanitizeCsvField($value): string
+    {
+        $value = (string) ($value ?? '-');
+        if (preg_match('/^[=+\-@\t\r]/', $value)) {
+            return "'" . $value;
+        }
+        return $value;
+    }
+
     protected function exportCSV(array $reports)
     {
         $fileName = 'laporan_cuti_' . date('Y-m-d') . '.csv';
@@ -146,13 +201,13 @@ class ReportController extends Controller
             foreach ($reports as $i => $r) {
                 fputcsv($output, [
                     $i + 1,
-                    $r['user_name'] ?? '-',
-                    $r['leave_type_name'] ?? '-',
+                    $this->sanitizeCsvField($r['user_name'] ?? '-'),
+                    $this->sanitizeCsvField($r['leave_type_name'] ?? '-'),
                     $r['tanggal_mulai'] ?? '-',
                     $r['tanggal_selesai'] ?? '-',
                     $r['total_hari'] ?? 0,
                     ucfirst($r['status'] ?? '-'),
-                    $r['alasan'] ?? '-',
+                    $this->sanitizeCsvField($r['alasan'] ?? '-'),
                 ]);
             }
 

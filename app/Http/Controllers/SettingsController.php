@@ -54,7 +54,18 @@ class SettingsController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[^A-Za-z0-9]/',
+            ],
+        ], [
+            'new_password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial.',
         ]);
 
         $email = Session::get('user_email');
@@ -72,6 +83,25 @@ class SettingsController extends Controller
 
         if ($result['success']) {
             $this->activityLog->log('update', 'Mengubah password');
+
+            // Invalidate current session tokens and regenerate session
+            // to prevent use of old access tokens after password change
+            $oldAccessToken = Session::get('supabase_access_token');
+            if ($oldAccessToken) {
+                $this->supabase->signOut($oldAccessToken);
+            }
+
+            // Store new tokens from the password change response
+            // (Supabase returns new tokens after password update)
+            if (isset($result['data']['access_token'])) {
+                Session::put('supabase_access_token', $result['data']['access_token']);
+            }
+            if (isset($result['data']['refresh_token'])) {
+                Session::put('supabase_refresh_token', $result['data']['refresh_token']);
+            }
+
+            Session::regenerate();
+
             return back()->with('success', 'Password berhasil diubah.');
         }
 

@@ -3,163 +3,199 @@
 @section('title', 'Profil Saya')
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">Profil Saya</h1>
-    <p class="page-subtitle">Kelola informasi profil dan akun Anda</p>
-</div>
+<div class="space-y-lg">
+    <!-- Page Header -->
+    <section>
+        <h2 class="text-headline-lg font-headline-lg text-on-background">Profil Saya</h2>
+        <p class="text-body-md font-body-md text-secondary">Kelola informasi profil dan akun Anda</p>
+    </section>
 
-<!-- Profile Header Card -->
-<div class="card" style="margin-bottom: 1.5rem;">
-    <div class="card-body">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            <img src="{{ session('profile_photo_url') ?? 'https://ui-avatars.com/api/?name=' . urlencode(session('user_name')) . '&size=80&background=4F46E5&color=fff' }}"
-                 alt="Profile" class="rounded-circle" width="80" height="80" style="object-fit:cover; border: 3px solid var(--color-primary-light);">
-            <div style="flex: 1; min-width: 200px;">
-                <h5 style="margin-bottom: 0.25rem; font-weight: 700;">{{ session('user_name') }}</h5>
-                <p class="text-muted" style="margin-bottom: 0.25rem; font-size: 0.875rem;">
-                    {{ session('user_email') }}
-                </p>
-                <span class="badge bg-primary">{{ ucfirst(session('user_role')) }}</span>
-            </div>
-            <div>
-                <form action="{{ route('profile.photo') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2" id="photoForm">
+    <!-- Profile Hero Card -->
+    <section class="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="relative h-32 bg-gradient-to-r from-primary-container to-primary"></div>
+        <div class="px-lg pb-lg -mt-12 flex flex-col sm:flex-row sm:items-end gap-lg">
+            <div class="relative">
+                <img src="{{ session('profile_photo_url') ?? 'https://ui-avatars.com/api/?name=' . urlencode(session('user_name')) . '&size=120&background=032bbe&color=fff&bold=true' }}"
+                     alt="Profile" class="w-24 h-24 rounded-2xl border-4 border-surface object-cover bg-surface-dim shadow-lg">
+                <label for="photoInput" class="absolute -bottom-2 -right-2 w-8 h-8 bg-primary text-on-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-container transition-all shadow-md">
+                    <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                </label>
+                <form action="{{ route('profile.photo') }}" method="POST" enctype="multipart/form-data" id="photoForm" class="hidden">
                     @csrf
-                    <label for="photoInput" class="btn btn-sm btn-outline-primary" style="cursor: pointer; margin-bottom: 0;">
-                        <i class="bi bi-camera me-1"></i>Ubah Foto
-                    </label>
-                    <input type="file" id="photoInput" name="photo" accept="image/jpeg,image/png"
-                           style="display: none;" onchange="document.getElementById('photoForm').submit()">
+                    <input type="file" id="photoInput" name="photo" accept="image/jpeg,image/png" onchange="document.getElementById('photoForm').submit()">
                 </form>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-headline-md font-headline-md text-on-background">{{ session('user_name') }}</h3>
+                <p class="text-body-sm font-body-sm text-secondary">{{ session('user_email') }}</p>
+                <span class="inline-block mt-xs px-3 py-1 bg-primary/10 text-primary text-label-sm font-label-sm rounded-full">
+                    {{ ucfirst(session('user_role')) }}
+                </span>
+            </div>
+            <div class="flex gap-sm">
                 @if(session('profile_photo_url'))
-                <form action="{{ route('profile.photo.delete') }}" method="POST" class="mt-2">
+                <form action="{{ route('profile.photo.delete') }}" method="POST">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-outline-danger" style="margin-bottom: 0;">
-                        <i class="bi bi-trash me-1"></i>Hapus Foto
+                    <button type="submit" class="flex items-center gap-xs px-md py-sm border border-outline-variant rounded-xl text-label-sm font-label-sm text-error hover:bg-error-container/10 transition-all">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        Hapus Foto
                     </button>
                 </form>
                 @endif
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<div class="row">
-    <!-- Edit Profile Form -->
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-person me-2"></i>Informasi Pribadi
-            </div>
-            <div class="card-body">
-                <form action="{{ route('profile.update') }}" method="POST">
-                    @csrf
-                    @method('PUT')
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
-                        <div>
-                            <label for="full_name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('full_name') is-invalid @enderror" id="full_name" name="full_name"
-                                   value="{{ old('full_name', $profile['full_name'] ?? '') }}" required>
-                            @error('full_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+    <div class="grid grid-cols-1 gap-lg">
+        <!-- Edit Profile Form -->
+        <div>
+            <section class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg border-b border-outline-variant bg-surface-container-low/50">
+                    <div class="flex items-center gap-md">
+                        <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[20px]">person</span>
                         </div>
-
-                        <div>
-                            <label for="phone" class="form-label">No. Telepon</label>
-                            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone"
-                                   value="{{ old('phone', $profile['phone'] ?? '') }}" maxlength="20" placeholder="08xxxxxxxxxx">
-                            @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <div>
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" value="{{ session('user_email') }}" disabled>
-                            <small class="text-muted">Email tidak dapat diubah</small>
-                        </div>
-
-                        <div>
-                            <label class="form-label">Departemen</label>
-                            @if(session('user_role') === 'admin')
-                            <select class="form-select" name="department_id">
-                                <option value="">— Belum Ditentukan —</option>
-                                @foreach($departments ?? [] as $dept)
-                                    <option value="{{ $dept['id'] }}" {{ ($profile['department_id'] ?? '') === $dept['id'] ? 'selected' : '' }}>
-                                        {{ $dept['nama'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @else
-                            <select class="form-select" disabled>
-                                <option>—</option>
-                                @foreach($departments ?? [] as $dept)
-                                    @if(($profile['department_id'] ?? '') === $dept['id'])
-                                        <option selected>{{ $dept['nama'] }}</option>
-                                    @endif
-                                @endforeach
-                            </select>
-                            <small class="text-muted">Hubungi admin untuk mengubah</small>
-                            @endif
-                        </div>
+                        <h4 class="text-label-md font-label-md text-on-background">Informasi Pribadi</h4>
                     </div>
+                </div>
+                <div class="p-lg">
+                    <form action="{{ route('profile.update') }}" method="POST" class="space-y-lg">
+                        @csrf
+                        @method('PUT')
 
-                    <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border-light); display: flex; gap: 0.75rem; align-items: center;">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Simpan Perubahan
-                        </button>
-                        <button type="button" onclick="deleteProfile()" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash me-1"></i>Hapus Akun
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+                            <div>
+                                <label for="full_name" class="block text-label-md font-label-md text-on-surface mb-sm">
+                                    Nama Lengkap <span class="text-error">*</span>
+                                </label>
+                                <input type="text" id="full_name" name="full_name"
+                                       value="{{ old('full_name', $profile['full_name'] ?? '') }}"
+                                       class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm @error('full_name') border-error @enderror"
+                                       required>
+                                @error('full_name')
+                                    <p class="mt-xs text-label-sm font-label-sm text-error">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-    <!-- Sidebar -->
-    <div class="col-md-4">
-        <!-- Account Info -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-            <div class="card-header">
-                <i class="bi bi-shield me-2"></i>Informasi Akun
-            </div>
-            <div class="card-body">
-                <div class="stat-mini">
-                    <span class="stat-mini-label">User ID</span>
-                    <span class="stat-mini-value" style="font-size: 0.7rem; font-family: monospace; word-break: break-all;">{{ substr(session('user_id'), 0, 8) }}...</span>
+                            <div>
+                                <label for="phone" class="block text-label-md font-label-md text-on-surface mb-sm">No. Telepon</label>
+                                <input type="text" id="phone" name="phone"
+                                       value="{{ old('phone', $profile['phone'] ?? '') }}"
+                                       maxlength="20" placeholder="08xxxxxxxxxx"
+                                       class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm @error('phone') border-error @enderror">
+                                @error('phone')
+                                    <p class="mt-xs text-label-sm font-label-sm text-error">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-label-md font-label-md text-on-surface mb-sm">Email</label>
+                                <input type="email" value="{{ session('user_email') }}" disabled
+                                       class="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-xl text-body-sm text-secondary cursor-not-allowed">
+                                <p class="mt-xs text-label-sm font-label-sm text-secondary">Email tidak dapat diubah</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-label-md font-label-md text-on-surface mb-sm">Departemen</label>
+                                @if(session('user_role') === 'admin')
+                                    <select name="department_id" class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm">
+                                        <option value="">— Belum Ditentukan —</option>
+                                        @foreach($departments ?? [] as $dept)
+                                            <option value="{{ $dept['id'] }}" {{ ($profile['department_id'] ?? '') === $dept['id'] ? 'selected' : '' }}>
+                                                {{ $dept['nama'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <select disabled class="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-xl text-body-sm text-secondary cursor-not-allowed">
+                                        <option>—</option>
+                                        @foreach($departments ?? [] as $dept)
+                                            @if(($profile['department_id'] ?? '') === $dept['id'])
+                                                <option selected>{{ $dept['nama'] }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-xs text-label-sm font-label-sm text-secondary">Hubungi admin untuk mengubah</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-md pt-md border-t border-outline-variant">
+                            <button type="submit" class="flex items-center gap-sm bg-primary text-on-primary px-lg py-md rounded-xl font-label-md text-label-md shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+                                <span class="material-symbols-outlined">check_circle</span>
+                                Simpan Perubahan
+                            </button>
+                            <button type="button" onclick="deleteProfile()" class="flex items-center gap-sm px-md py-md border border-error/30 text-error rounded-xl font-label-md text-label-md hover:bg-error-container/10 transition-all">
+                                <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+                                Hapus Akun
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="stat-mini">
-                    <span class="stat-mini-label">Bergabung</span>
-                    <span class="stat-mini-value" style="font-size: 0.875rem;">
-                        {{ isset($profile['created_at']) ? \Carbon\Carbon::parse($profile['created_at'])->format('d M Y') : '-' }}
-                    </span>
-                </div>
-                <div class="stat-mini">
-                    <span class="stat-mini-label">Login Terakhir</span>
-                    <span class="stat-mini-value" style="font-size: 0.875rem;">
-                        {{ isset($profile['last_login_at']) ? \Carbon\Carbon::parse($profile['last_login_at'])->diffForHumans() : '-' }}
-                    </span>
-                </div>
-            </div>
+            </section>
         </div>
 
-        <!-- Quick Links -->
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-lightning me-2"></i>Aksi Cepat
+        <!-- Account Info & Quick Links -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+            <!-- Account Info Card -->
+            <div class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg border-b border-outline-variant bg-surface-container-low/50">
+                    <div class="flex items-center gap-md">
+                        <div class="w-8 h-8 bg-secondary-container rounded-lg flex items-center justify-center text-on-secondary-container">
+                            <span class="material-symbols-outlined text-[20px]">shield</span>
+                        </div>
+                        <h4 class="text-label-md font-label-md text-on-background">Informasi Akun</h4>
+                    </div>
+                </div>
+                <div class="p-lg space-y-md">
+                    <div class="flex justify-between items-center py-sm border-b border-outline-variant/50">
+                        <span class="text-body-sm font-body-sm text-secondary">User ID</span>
+                        <span class="text-label-sm font-label-sm text-on-background font-mono">{{ substr(session('user_id'), 0, 8) }}...</span>
+                    </div>
+                    <div class="flex justify-between items-center py-sm border-b border-outline-variant/50">
+                        <span class="text-body-sm font-body-sm text-secondary">Bergabung</span>
+                        <span class="text-label-sm font-label-sm text-on-background">
+                            {{ isset($profile['created_at']) ? \Carbon\Carbon::parse($profile['created_at'])->format('d M Y') : '-' }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center py-sm">
+                        <span class="text-body-sm font-body-sm text-secondary">Login Terakhir</span>
+                        <span class="text-label-sm font-label-sm text-on-background">
+                            {{ isset($profile['last_login_at']) ? \Carbon\Carbon::parse($profile['last_login_at'])->diffForHumans() : '-' }}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="d-flex flex-column gap-2">
-                    <a href="{{ route('settings') }}" class="quick-action-btn">
-                        <div class="qa-icon purple"><i class="bi bi-gear"></i></div>
-                        <span>Pengaturan Akun</span>
+
+            <!-- Quick Links Card -->
+            <div class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg border-b border-outline-variant bg-surface-container-low/50">
+                    <div class="flex items-center gap-md">
+                        <div class="w-8 h-8 bg-primary-fixed rounded-lg flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[20px]">bolt</span>
+                        </div>
+                        <h4 class="text-label-md font-label-md text-on-background">Aksi Cepat</h4>
+                    </div>
+                </div>
+                <div class="p-sm">
+                    <a href="{{ route('settings') }}" class="flex items-center gap-md px-md py-md rounded-lg hover:bg-surface-container-low transition-colors no-underline group">
+                        <div class="w-9 h-9 bg-secondary-container rounded-lg flex items-center justify-center text-on-secondary-container group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-[20px]">settings</span>
+                        </div>
+                        <span class="text-body-sm font-label-md text-on-background">Pengaturan Akun</span>
                     </a>
-                    <a href="{{ route('settings') }}#password" class="quick-action-btn">
-                        <div class="qa-icon orange"><i class="bi bi-key"></i></div>
-                        <span>Ubah Password</span>
+                    <a href="{{ route('settings') }}#password" class="flex items-center gap-md px-md py-md rounded-lg hover:bg-surface-container-low transition-colors no-underline group">
+                        <div class="w-9 h-9 bg-error-container rounded-lg flex items-center justify-center text-on-error-container group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-[20px]">key</span>
+                        </div>
+                        <span class="text-body-sm font-label-md text-on-background">Ubah Password</span>
                     </a>
-                    <a href="{{ route('leave.create') }}" class="quick-action-btn">
-                        <div class="qa-icon blue"><i class="bi bi-plus-circle"></i></div>
-                        <span>Ajukan Cuti</span>
+                    <a href="{{ route('leave.create') }}" class="flex items-center gap-md px-md py-md rounded-lg hover:bg-surface-container-low transition-colors no-underline group">
+                        <div class="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                        </div>
+                        <span class="text-body-sm font-label-md text-on-background">Ajukan Cuti</span>
                     </a>
                 </div>
             </div>

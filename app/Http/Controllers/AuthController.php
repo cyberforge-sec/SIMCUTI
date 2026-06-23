@@ -8,7 +8,6 @@ use App\Services\CaptchaService;
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
@@ -66,6 +65,13 @@ class AuthController extends Controller
         $result = $this->supabase->signIn($request->email, $request->password);
 
         if (!$result['success']) {
+            $errorMsg = $result['error'] ?? '';
+            if (str_contains($errorMsg, 'email_not_confirmed')) {
+                return back()->withErrors([
+                    'email' => 'Email belum diverifikasi. Silakan cek kotak masuk email Anda dan klik link verifikasi sebelum login.',
+                ])->withInput();
+            }
+
             // Increment failed attempts in cache (persists across sessions)
             $attempts++;
             Cache::put($rateLimitKey, $attempts, now()->addMinutes(15));
@@ -141,14 +147,22 @@ class AuthController extends Controller
         }
         Session::put('profile_photo_url', $photoUrl);
 
-        // Always require 2FA for all accounts
-        Session::put('2fa_required', true);
-        Session::put('2fa_verified', false);
+        // Check if 2FA is enabled for this user (respects profile setting)
+        $twoFactorEnabled = $profile['two_factor_enabled'] ?? false;
+        Session::put('2fa_required', $twoFactorEnabled);
+        Session::put('2fa_verified', !$twoFactorEnabled);
+        if (!$twoFactorEnabled) {
+            Session::put('2fa_verified_at', now()->toIso8601String());
+        }
 
-        $this->generateAndSend2FACode($userId, $request->email, $profile['full_name']);
+        if ($twoFactorEnabled) {
+            $this->generateAndSend2FACode($userId, $request->email, $profile['full_name']);
+            $this->activityLog->log('login', 'Login (menunggu verifikasi 2FA)', null, null, $userId);
+            return redirect()->route('2fa.show');
+        }
 
-        $this->activityLog->log('login', 'Login (menunggu verifikasi 2FA)', null, null, $userId);
-        return redirect()->route('2fa.show');
+        $this->activityLog->log('login', 'Login berhasil');
+        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request)
@@ -162,7 +176,7 @@ class AuthController extends Controller
         }
 
         Session::flush();
-        return redirect()->route('login')->withCookie(cookie()->forget('remember_me'));
+        return redirect()->route('login');
     }
 
     /**
@@ -173,6 +187,13 @@ class AuthController extends Controller
         if (!in_array($provider, ['github', 'google'])) {
             abort(404);
         }
+
+        // Generate a CSRF nonce and store it in session for validation on callback.
+        // The nonce stays in session only — NOT embedded in the redirect_to URL.
+        // This prevents nonce exposure in third-party OAuth URLs (Google, GitHub).
+        $oauthNonce = bin2hex(random_bytes(16));
+        Session::put('oauth_nonce', $oauthNonce);
+        Session::put('oauth_nonce_at', now()->toIso8601String());
 
         $redirectTo = config('app.url') . '/oauth-callback';
         $params = http_build_query([
@@ -201,6 +222,19 @@ class AuthController extends Controller
             'access_token' => 'required|string',
             'refresh_token' => 'required|string',
         ]);
+
+        // Validate that an OAuth flow was initiated by THIS session (CSRF protection).
+        // The nonce was stored server-side in session by oauthRedirect() — never exposed in URLs.
+        // This ensures the callback is a legitimate response to a user-initiated OAuth flow,
+        // not an attacker trying to inject their own tokens into a victim's session.
+        $storedNonceAt = Session::get('oauth_nonce_at');
+        $hasNonce = Session::has('oauth_nonce');
+        Session::forget('oauth_nonce');
+        Session::forget('oauth_nonce_at');
+
+        if (!$hasNonce || !$storedNonceAt || now()->diffInMinutes($storedNonceAt) > 10) {
+            return response()->json(['success' => false, 'error' => 'Sesi OAuth tidak valid atau sudah kadaluarsa. Silakan coba login kembali.'], 403);
+        }
 
         $accessToken = $request->access_token;
         $refreshToken = $request->refresh_token;
@@ -274,14 +308,22 @@ class AuthController extends Controller
         }
         Session::put('profile_photo_url', $photoUrl);
 
-        // Always require 2FA for all accounts
-        Session::put('2fa_required', true);
-        Session::put('2fa_verified', false);
+        // Check if 2FA is enabled for this user (respects profile setting)
+        $twoFactorEnabled = $profile['two_factor_enabled'] ?? false;
+        Session::put('2fa_required', $twoFactorEnabled);
+        Session::put('2fa_verified', !$twoFactorEnabled);
+        if (!$twoFactorEnabled) {
+            Session::put('2fa_verified_at', now()->toIso8601String());
+        }
 
-        $this->generateAndSend2FACode($userId, $user['email'] ?? '', $profile['full_name']);
+        if ($twoFactorEnabled) {
+            $this->generateAndSend2FACode($userId, $user['email'] ?? '', $profile['full_name']);
+            $this->activityLog->log('login', 'Login via OAuth (menunggu verifikasi 2FA)', null, null, $userId);
+            return response()->json(['success' => true, 'redirect' => route('2fa.show')]);
+        }
 
-        $this->activityLog->log('login', 'Login via OAuth (menunggu verifikasi 2FA)', null, null, $userId);
-        return response()->json(['success' => true, 'redirect' => route('2fa.show')]);
+        $this->activityLog->log('login', 'Login via OAuth berhasil');
+        return response()->json(['success' => true, 'redirect' => route('dashboard')]);
     }
 
     /**
@@ -299,7 +341,7 @@ class AuthController extends Controller
             'user_id' => $userId,
             'kode' => $code,
             'used' => false,
-            'expires_at' => now()->addMinutes(5)->toIso8601String(),
+            'expires_at' => now()->addMinutes(10)->toIso8601String(),
         ], true);
 
         try {

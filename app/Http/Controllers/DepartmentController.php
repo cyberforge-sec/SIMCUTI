@@ -67,6 +67,14 @@ class DepartmentController extends Controller
             return back()->withErrors(['kode' => 'Kode departemen sudah digunakan.'])->withInput();
         }
 
+        // Validate that manager_id belongs to a user with role='manager'
+        if ($request->manager_id) {
+            $managerProfile = $this->supabase->selectAdmin('profiles', 'role', ['id' => $request->manager_id]);
+            if (empty($managerProfile) || $managerProfile[0]['role'] !== 'manager') {
+                return back()->withErrors(['manager_id' => 'User yang dipilih bukan seorang manager.'])->withInput();
+            }
+        }
+
         $data = [
             'nama' => $request->nama,
             'kode' => $request->kode,
@@ -111,6 +119,14 @@ class DepartmentController extends Controller
             'manager_id' => 'nullable|string',
             'deskripsi' => 'nullable|string',
         ]);
+
+        // Validate that manager_id belongs to a user with role='manager'
+        if ($request->manager_id) {
+            $managerProfile = $this->supabase->selectAdmin('profiles', 'role', ['id' => $request->manager_id]);
+            if (empty($managerProfile) || $managerProfile[0]['role'] !== 'manager') {
+                return back()->withErrors(['manager_id' => 'User yang dipilih bukan seorang manager.'])->withInput();
+            }
+        }
 
         $data = [
             'nama' => $request->nama,

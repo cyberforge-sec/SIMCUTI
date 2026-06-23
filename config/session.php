@@ -64,6 +64,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Session File Permissions
+    |--------------------------------------------------------------------------
+    |
+    | When utilizing the "file" session driver, the session files are stored
+    | on disk. This option allows you to set the file permissions to ensure
+    | that session files are not world-readable.
+    |
+    */
+
+    'permission' => '0600',
+
+    /*
+    |--------------------------------------------------------------------------
     | Session Database Connection
     |--------------------------------------------------------------------------
     |

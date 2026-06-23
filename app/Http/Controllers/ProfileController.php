@@ -55,7 +55,7 @@ class ProfileController extends Controller
             Session::forget('user_department_id');
         }
 
-        $result = $this->supabase->update('profiles', ['id' => $userId], $data);
+        $result = $this->supabase->update('profiles', ['id' => $userId], $data, true);
 
         if ($result['success']) {
             Session::put('user_name', $request->full_name);
@@ -66,6 +66,12 @@ class ProfileController extends Controller
         return back()->withErrors(['error' => 'Gagal memperbarui profil.'])->withInput();
     }
 
+    /**
+     * Maximum allowed image dimensions in pixels (width × height).
+     * Prevents "image bomb" / memory exhaustion attacks via GD library.
+     */
+    protected const MAX_IMAGE_PIXELS = 50_000_000;
+
     public function updatePhoto(Request $request)
     {
         $userId = Session::get('user_id');
@@ -74,6 +80,16 @@ class ProfileController extends Controller
         ]);
 
         $file = $request->file('photo');
+
+        // Validate image dimensions BEFORE loading into memory
+        // to prevent image bomb attacks (small file, massive pixel count)
+        $imageInfo = @getimagesize($file->getRealPath());
+        if ($imageInfo) {
+            $pixelCount = $imageInfo[0] * $imageInfo[1];
+            if ($pixelCount > self::MAX_IMAGE_PIXELS) {
+                return back()->withErrors(['photo' => 'Dimensi gambar terlalu besar. Maksimal 50 megapixels.']);
+            }
+        }
 
         // Strip EXIF metadata for privacy
         try {
@@ -110,7 +126,8 @@ class ProfileController extends Controller
         \Illuminate\Support\Facades\Log::info('Profile photo upload result', $uploadResult);
 
         if ($uploadResult['success']) {
-            $updateResult = $this->supabase->update('profiles', ['id' => $userId], ['profile_photo_url' => $fileName]);
+            // Use admin=true for profile update to ensure RLS doesn't block legitimate updates
+            $updateResult = $this->supabase->update('profiles', ['id' => $userId], ['profile_photo_url' => $fileName], true);
             \Illuminate\Support\Facades\Log::info('Profile database update result', $updateResult);
 
             $photoUrl = $this->supabase->getSignedUrl($bucket, $fileName, 604800);
@@ -135,7 +152,7 @@ class ProfileController extends Controller
         $profile = $this->supabase->selectSingle('profiles', 'id', $userId);
         if (!empty($profile['profile_photo_url'])) {
             $this->supabase->deleteFile($bucket, [$profile['profile_photo_url']]);
-            $this->supabase->update('profiles', ['id' => $userId], ['profile_photo_url' => null]);
+            $this->supabase->update('profiles', ['id' => $userId], ['profile_photo_url' => null], true);
             Session::forget('profile_photo_url');
             $this->activityLog->log('update', 'Menghapus foto profil');
         }

@@ -675,16 +675,47 @@ class SupabaseService
     }
 
     /**
-     * Parse Guzzle error into readable message
+     * Parse Guzzle error into a safe, user-displayable message.
+     * Logs the full detailed error server-side for debugging,
+     * but strips internal DB/schema details before returning to prevent
+     * information disclosure (table names, column names, constraint details).
      */
     protected function parseError(GuzzleException $e): string
     {
+        $detailedError = $e->getMessage();
+        $statusCode = 0;
+
         if (method_exists($e, 'getResponse') && $e->getResponse()) {
-            $body = $e->getResponse()->getBody()->getContents();
+            $response = $e->getResponse();
+            $statusCode = $response->getStatusCode();
+            $body = $response->getBody()->getContents();
             $data = json_decode($body, true);
-            return $data['message'] ?? $data['error_description'] ?? $data['error'] ?? $body;
+
+            $detailedError = $data['message'] ?? $data['error_description'] ?? $data['error'] ?? $body;
         }
-        return $e->getMessage();
+
+        // Log the FULL detailed error for server-side debugging
+        Log::error('Supabase error (detail)', [
+            'message' => $detailedError,
+            'status_code' => $statusCode,
+        ]);
+
+        // --- Sanitize: return safe messages for user-facing display ---
+
+        // Auth errors from Supabase are generally safe to show (e.g., "Invalid login credentials")
+        if ($statusCode === 400 || $statusCode === 401 || $statusCode === 422 || $statusCode === 429) {
+            // Supabase auth messages are designed for end-user consumption
+            return $detailedError;
+        }
+
+        // Rate limiting
+        if ($statusCode === 429) {
+            return 'Terlalu banyak percobaan. Silakan coba lagi nanti.';
+        }
+
+        // For all other errors (403, 404, 409, 5xx), return generic messages
+        // to prevent leaking table names, column names, or schema details
+        return 'Terjadi kesalahan pada server. Silakan coba lagi.';
     }
 
     /**

@@ -36,10 +36,10 @@
                 <p class="mb-1 text-muted">{{ $notif['message'] ?? '-' }}</p>
                 @if(empty($notif['is_read']))
                 <button class="btn btn-sm btn-outline-primary mt-1" onclick="markRead('{{ $notif['id'] }}')">
-                    <i class="bi bi-check2 me-1"></i>Tandai Dibaca
+                    <span class="material-symbols-outlined2 me-1">check</span>Tandai Dibaca
                 </button>
                 @else
-                <small class="text-muted"><i class="bi bi-check2-all"></i> Sudah dibaca</small>
+                <small class="text-muted"><span class="material-symbols-outlined2-all">check</span> Sudah dibaca</small>
                 @endif
             </div>
         </div>
@@ -65,7 +65,7 @@ function markRead(id) {
         if (data.success) {
             const el = document.getElementById('notif-' + id);
             el.classList.remove('bg-light');
-            el.querySelector('button').outerHTML = '<small class="text-muted"><i class="bi bi-check2-all"></i> Sudah dibaca</small>';
+            el.querySelector('button').outerHTML = '<small class="text-muted"><span class="material-symbols-outlined2-all">check</span> Sudah dibaca</small>';
         }
     });
 }

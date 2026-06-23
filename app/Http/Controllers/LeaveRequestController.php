@@ -10,6 +10,13 @@ use Illuminate\Support\Str;
 
 class LeaveRequestController extends Controller
 {
+    /**
+     * Maximum allowed image dimensions in pixels (width × height).
+     * Prevents "image bomb" / memory exhaustion attacks via GD library.
+     * 50 megapixels covers all practical use cases (8K = ~33MP).
+     */
+    protected const MAX_IMAGE_PIXELS = 50_000_000;
+
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
@@ -25,7 +32,9 @@ class LeaveRequestController extends Controller
 
         $filters = ['user_id' => 'eq.' . $userId];
 
-        if ($request->has('status') && $request->status) {
+        // Whitelist valid status values to prevent PostgREST filter injection
+        $allowedStatuses = ['pending', 'disetujui', 'ditolak', 'dibatalkan'];
+        if ($request->has('status') && $request->status && in_array($request->status, $allowedStatuses, true)) {
             $filters['status'] = 'eq.' . $request->status;
         }
 
@@ -88,12 +97,13 @@ class LeaveRequestController extends Controller
         $endDate = \Carbon\Carbon::parse($request->tanggal_selesai);
         $totalHari = $startDate->diffInDays($endDate) + 1;
 
-        // Check leave balance (skip for unpaid leave)
+        // Check leave balance using the year of the leave request, not current year
+        $leaveYear = date('Y', strtotime($request->tanggal_mulai));
         $leaveType = $this->supabase->selectSingle('leave_types', 'id', $request->leave_type_id);
         if ($leaveType && $leaveType['kode'] !== 'CTG') {
             $balances = $this->supabase->select('leave_balances', '*', [
                 'user_id' => $userId,
-                'tahun' => date('Y'),
+                'tahun' => $leaveYear,
             ]);
             if (!empty($balances) && $balances[0]['sisa'] < $totalHari) {
                 return back()->withErrors(['error' => 'Sisa cuti tidak mencukupi.'])->withInput();
@@ -166,6 +176,7 @@ class LeaveRequestController extends Controller
             'total_hari' => $totalHari,
             'alasan' => strip_tags($request->alasan),
             'status' => 'pending',
+            'lampiran_url' => $lampiranUrl,
         ];
 
         $result = $this->supabase->insert('leave_requests', $data);
@@ -247,13 +258,31 @@ class LeaveRequestController extends Controller
         $userId = Session::get('user_id');
         $request->validate([
             'leave_type_id' => 'required|string',
-            'tanggal_mulai' => 'required|date',
+            'tanggal_mulai' => 'required|date|after_or_equal:today',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'alasan' => 'required|string|min:20',
             'lampiran' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $totalHari = \Carbon\Carbon::parse($request->tanggal_mulai)->diffInDays(\Carbon\Carbon::parse($request->tanggal_selesai)) + 1;
+
+        // Check leave balance using the year of the leave request, not current year
+        $leaveYear = date('Y', strtotime($request->tanggal_mulai));
+        $leaveType = $this->supabase->selectSingle('leave_types', 'id', $request->leave_type_id);
+        if ($leaveType && $leaveType['kode'] !== 'CTG') {
+            $balances = $this->supabase->select('leave_balances', '*', [
+                'user_id' => $userId,
+                'tahun' => $leaveYear,
+            ]);
+            if (!empty($balances) && $balances[0]['sisa'] < $totalHari) {
+                return back()->withErrors(['error' => 'Sisa cuti tidak mencukupi.'])->withInput();
+            }
+        }
+
+        // Check max days per leave type
+        if ($leaveType && $totalHari > $leaveType['max_hari_per_pengajuan']) {
+            return back()->withErrors(['error' => "Total hari melebihi batas maksimal ({$leaveType['max_hari_per_pengajuan']} hari)."])->withInput();
+        }
 
         $data = [
             'leave_type_id' => $request->leave_type_id,
@@ -263,19 +292,55 @@ class LeaveRequestController extends Controller
             'alasan' => strip_tags($request->alasan),
         ];
 
+        // Fetch old leave request to get existing lampiran_url
+        $oldLeave = $this->supabase->selectSingle('leave_requests', 'id', $id, 'lampiran_url');
+        $oldLampiranUrl = $oldLeave['lampiran_url'] ?? null;
+
+        // Handle file upload (same as store())
+        $lampiranUrl = null;
         if ($request->hasFile('lampiran')) {
             $file = $request->file('lampiran');
 
-            // File validation (magic bytes) — same as store()
+            // File validation (magic bytes)
             $validMimes = ['application/pdf', 'image/jpeg', 'image/png'];
             if (!in_array($file->getMimeType(), $validMimes)) {
                 return back()->withErrors(['lampiran' => 'Tipe file tidak valid.'])->withInput();
+            }
+
+            // Min size 10KB
+            if ($file->getSize() < 10240) {
+                return back()->withErrors(['lampiran' => 'Ukuran file minimal 10KB.'])->withInput();
             }
 
             // Strip EXIF data from images for privacy
             if (in_array($file->getMimeType(), ['image/jpeg', 'image/png'])) {
                 $this->stripExifData($file->getRealPath(), $file->getMimeType());
             }
+
+            $bucket = config('services.supabase.storage_bucket');
+            $fileName = $userId . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
+
+            $uploadResult = $this->supabase->uploadFile(
+                $bucket,
+                $fileName,
+                file_get_contents($file->getRealPath()),
+                $file->getMimeType()
+            );
+
+            if ($uploadResult['success']) {
+                $lampiranUrl = $fileName;
+                // Delete old file from storage if exists
+                if ($oldLampiranUrl) {
+                    $this->supabase->deleteFile($bucket, [$oldLampiranUrl]);
+                }
+            } else {
+                return back()->withErrors(['lampiran' => 'Gagal upload file: ' . ($uploadResult['error'] ?? '')])->withInput();
+            }
+        }
+
+        // Include lampiran_url in data if a new file was uploaded
+        if ($lampiranUrl) {
+            $data['lampiran_url'] = $lampiranUrl;
         }
 
         $result = $this->supabase->update('leave_requests', ['id' => $id, 'user_id' => $userId, 'status' => 'pending'], $data);
@@ -348,7 +413,9 @@ class LeaveRequestController extends Controller
         $memberIds = array_column($teamMembers, 'id');
 
         $filters = ['user_id' => 'in.(' . implode(',', $memberIds) . ')'];
-        if ($request->has('status') && $request->status) {
+        // Whitelist valid status values to prevent PostgREST filter injection
+        $allowedStatuses = ['pending', 'disetujui', 'ditolak', 'dibatalkan'];
+        if ($request->has('status') && $request->status && in_array($request->status, $allowedStatuses, true)) {
             $filters['status'] = 'eq.' . $request->status;
         }
 
@@ -369,6 +436,7 @@ class LeaveRequestController extends Controller
     {
         $userId = Session::get('user_id');
         $role = Session::get('user_role');
+        $departmentId = Session::get('user_department_id');
 
         if (!in_array($role, ['manager', 'admin'])) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses.'], 403);
@@ -384,12 +452,27 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Tidak bisa menyetujui pengajuan sendiri.'], 403);
         }
 
-        $balances = $this->supabase->selectAdmin('leave_balances', '*', [
-            'user_id' => $leave['user_id'],
-            'tahun' => date('Y', strtotime($leave['tanggal_mulai'])),
-        ]);
-        if (!empty($balances) && $balances[0]['sisa'] < $leave['total_hari']) {
-            return response()->json(['success' => false, 'message' => 'Saldo cuti tidak mencukupi.'], 400);
+        // Department scoping: managers can only approve requests from their own department
+        if ($role === 'manager') {
+            $leaveOwnerProfiles = $this->supabase->selectAdmin('profiles', 'department_id', ['id' => $leave['user_id']]);
+            $leaveOwnerDeptId = $leaveOwnerProfiles[0]['department_id'] ?? null;
+            if ($leaveOwnerDeptId !== $departmentId) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
+            }
+        }
+
+        // Check leave balance (skip for unpaid leave / CTG)
+        $leaveType = $this->supabase->selectAdmin('leave_types', 'kode', ['id' => $leave['leave_type_id']]);
+        $leaveTypeCode = $leaveType[0]['kode'] ?? null;
+
+        if ($leaveTypeCode !== 'CTG') {
+            $balances = $this->supabase->selectAdmin('leave_balances', '*', [
+                'user_id' => $leave['user_id'],
+                'tahun' => date('Y', strtotime($leave['tanggal_mulai'])),
+            ]);
+            if (!empty($balances) && $balances[0]['sisa'] < $leave['total_hari']) {
+                return response()->json(['success' => false, 'message' => 'Saldo cuti tidak mencukupi.'], 400);
+            }
         }
 
         $result = $this->supabase->update('leave_requests', ['id' => $id], [
@@ -413,6 +496,7 @@ class LeaveRequestController extends Controller
 
         $userId = Session::get('user_id');
         $role = Session::get('user_role');
+        $departmentId = Session::get('user_department_id');
 
         if (!in_array($role, ['manager', 'admin'])) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses.'], 403);
@@ -426,6 +510,15 @@ class LeaveRequestController extends Controller
 
         if ($leave['user_id'] === $userId) {
             return response()->json(['success' => false, 'message' => 'Tidak bisa menolak pengajuan sendiri.'], 403);
+        }
+
+        // Department scoping: managers can only reject requests from their own department
+        if ($role === 'manager') {
+            $leaveOwnerProfiles = $this->supabase->selectAdmin('profiles', 'department_id', ['id' => $leave['user_id']]);
+            $leaveOwnerDeptId = $leaveOwnerProfiles[0]['department_id'] ?? null;
+            if ($leaveOwnerDeptId !== $departmentId) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
+            }
         }
 
         $result = $this->supabase->update('leave_requests', ['id' => $id], [
@@ -490,11 +583,26 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * Strip EXIF metadata from uploaded images for privacy
+     * Strip EXIF metadata from uploaded images for privacy.
+     * Includes dimension validation to prevent image bomb / memory exhaustion attacks.
      */
     protected function stripExifData(string $filePath, string $mimeType): void
     {
         try {
+            // Validate image dimensions BEFORE loading into memory
+            // to prevent image bomb attacks (small file, massive pixel count)
+            $imageInfo = @getimagesize($filePath);
+            if ($imageInfo) {
+                $pixelCount = $imageInfo[0] * $imageInfo[1];
+                if ($pixelCount > self::MAX_IMAGE_PIXELS) {
+                    \Illuminate\Support\Facades\Log::warning('Image bomb rejected', [
+                        'dimensions' => $imageInfo[0] . 'x' . $imageInfo[1],
+                        'pixels' => $pixelCount,
+                    ]);
+                    return; // Skip EXIF stripping — image is too large to safely process
+                }
+            }
+
             if ($mimeType === 'image/jpeg' && function_exists('imagecreatefromjpeg')) {
                 $image = imagecreatefromjpeg($filePath);
                 if ($image) {

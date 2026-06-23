@@ -55,6 +55,7 @@ class ForgotPasswordController extends Controller
         // Supabase redirects here with ?token=xxx&type=recovery
         $token = $request->query('token', '');
         $type  = $request->query('type', 'recovery');
+        $isAccessToken = $request->query('is_access_token', false);
 
         // If no token, show error
         if (empty($token)) {
@@ -62,38 +63,64 @@ class ForgotPasswordController extends Controller
                 ->withErrors(['email' => 'Link reset tidak valid atau sudah kadaluarsa.']);
         }
 
-        return view('auth.reset-password', compact('token', 'type'));
+        return view('auth.reset-password', compact('token', 'type', 'isAccessToken'));
     }
 
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[^A-Za-z0-9]/',
+            ],
             'token'    => 'required|string',
+            'is_access_token' => 'nullable|boolean',
+        ], [
+            'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial.',
         ]);
 
-        // Step 1: Verify the recovery token with Supabase
-        // This exchanges the recovery token for a valid access_token
-        $verifyResult = $this->supabase->verifyOtp($request->token, 'recovery');
+        if ($request->is_access_token) {
+            $accessToken = $request->token;
+            // Verify access token is valid
+            $user = $this->supabase->getUser($accessToken);
+            if (!$user) {
+                Log::warning('Reset password access token verification failed');
+                return back()->withErrors([
+                    'password' => 'Token tidak valid atau sudah kadaluarsa. Silakan minta link baru.',
+                ]);
+            }
+            $userEmail = $user['email'] ?? 'unknown';
+        } else {
+            // Step 1: Verify the recovery token with Supabase
+            // This exchanges the recovery token for a valid access_token
+            $verifyResult = $this->supabase->verifyOtp($request->token, 'recovery');
 
-        if (!$verifyResult['success']) {
-            Log::warning('Reset password OTP verification failed: ' . ($verifyResult['error'] ?? 'unknown'));
-            return back()->withErrors([
-                'password' => 'Token tidak valid atau sudah kadaluarsa. Silakan minta link baru.',
-            ]);
-        }
+            if (!$verifyResult['success']) {
+                Log::warning('Reset password OTP verification failed: ' . ($verifyResult['error'] ?? 'unknown'));
+                return back()->withErrors([
+                    'password' => 'Token tidak valid atau sudah kadaluarsa. Silakan minta link baru.',
+                ]);
+            }
 
-        // Step 2: Extract the access_token from the verify response
-        $accessToken = $verifyResult['data']['access_token'] ?? null;
-        if (!$accessToken) {
-            return back()->withErrors(['password' => 'Gagal memverifikasi token. Silakan coba lagi.']);
+            // Step 2: Extract the access_token from the verify response
+            $accessToken = $verifyResult['data']['access_token'] ?? null;
+            if (!$accessToken) {
+                return back()->withErrors(['password' => 'Gagal memverifikasi token. Silakan coba lagi.']);
+            }
+            $userEmail = $verifyResult['data']['user']['email'] ?? 'unknown';
         }
 
         // Step 3: Update the password using the valid access_token
         $updateResult = $this->supabase->updatePassword($request->password, $accessToken);
 
         if ($updateResult['success']) {
-            Log::info('Password reset successful for user: ' . ($verifyResult['data']['user']['email'] ?? 'unknown'));
+            Log::info('Password reset successful for user: ' . $userEmail);
             return redirect()->route('login')
                 ->with('success', 'Password berhasil direset! Silakan login dengan password baru.');
         }

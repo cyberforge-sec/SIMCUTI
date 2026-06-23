@@ -3,236 +3,213 @@
 @section('title', 'Laporan Cuti')
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">Laporan Cuti</h1>
-    <p class="page-subtitle">Generate dan export laporan pengajuan cuti</p>
-</div>
+<!-- Page Header -->
+<section class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-lg">
+    <div>
+        <h2 class="text-headline-lg font-headline-lg text-on-background flex items-center gap-sm">
+            <span class="material-symbols-outlined text-primary" style="font-size: 32px;">analytics</span>
+            Laporan Cuti
+        </h2>
+        <p class="text-body-md font-body-md text-secondary mt-xs">Generate dan export laporan pengajuan cuti</p>
+    </div>
+</section>
 
-<!-- Stats Cards -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #10B981, #059669);">
-            <div class="stats-icon">
-                <i class="bi bi-check-circle"></i>
-            </div>
-            <div class="stats-value">{{ $stats['totalApproved'] ?? 0 }}</div>
-            <div class="stats-label">Disetujui</div>
+<!-- Stats Overview -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-lg">
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+            <span class="material-symbols-outlined" style="font-size: 28px; font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <div>
+            <p class="text-body-sm font-body-sm text-secondary">Disetujui</p>
+            <p class="text-headline-md font-headline-md text-on-background">{{ $stats['totalApproved'] ?? 0 }}</p>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
-            <div class="stats-icon">
-                <i class="bi bi-clock"></i>
-            </div>
-            <div class="stats-value">{{ $stats['totalPending'] ?? 0 }}</div>
-            <div class="stats-label">Pending</div>
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+        <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
+            <span class="material-symbols-outlined" style="font-size: 28px; font-variation-settings: 'FILL' 1;">schedule</span>
+        </div>
+        <div>
+            <p class="text-body-sm font-body-sm text-secondary">Pending</p>
+            <p class="text-headline-md font-headline-md text-on-background">{{ $stats['totalPending'] ?? 0 }}</p>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #EF4444, #DC2626);">
-            <div class="stats-icon">
-                <i class="bi bi-x-circle"></i>
-            </div>
-            <div class="stats-value">{{ $stats['totalRejected'] ?? 0 }}</div>
-            <div class="stats-label">Ditolak</div>
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+        <div class="w-14 h-14 bg-error-container/20 rounded-full flex items-center justify-center text-error">
+            <span class="material-symbols-outlined" style="font-size: 28px; font-variation-settings: 'FILL' 1;">cancel</span>
+        </div>
+        <div>
+            <p class="text-body-sm font-body-sm text-secondary">Ditolak</p>
+            <p class="text-headline-md font-headline-md text-on-background">{{ $stats['totalRejected'] ?? 0 }}</p>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">
-            <div class="stats-icon">
-                <i class="bi bi-calendar-check"></i>
-            </div>
-            <div class="stats-value">{{ $stats['totalDays'] ?? 0 }}</div>
-            <div class="stats-label">Hari Terpakai</div>
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined" style="font-size: 28px; font-variation-settings: 'FILL' 1;">event_available</span>
+        </div>
+        <div>
+            <p class="text-body-sm font-body-sm text-secondary">Hari Terpakai</p>
+            <p class="text-headline-md font-headline-md text-on-background">{{ $stats['totalDays'] ?? 0 }}</p>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-header">
-        <i class="bi bi-funnel me-2"></i>Filter Laporan
-    </div>
-    <div class="card-body">
-        <form action="{{ route('reports.index') }}" method="GET" id="filterForm">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="">Semua Status</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
-                        <option value="ditolak" {{ request('status') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Jenis Cuti</label>
-                    <select name="leave_type_id" class="form-select">
-                        <option value="">Semua Jenis</option>
-                        @foreach($leaveTypes ?? [] as $lt)
-                        <option value="{{ $lt['id'] }}" {{ request('leave_type_id') === $lt['id'] ? 'selected' : '' }}>{{ $lt['nama'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Dari Tanggal</label>
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Sampai Tanggal</label>
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                </div>
+<!-- Filter Section -->
+<section class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm mb-lg">
+    <form action="{{ route('reports.index') }}" method="GET" id="filterForm" class="space-y-md">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+            <div>
+                <label class="text-label-sm font-label-md text-secondary mb-xs block">Status</label>
+                <select name="status" class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm">
+                    <option value="">Semua Status</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                    <option value="ditolak" {{ request('status') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                </select>
             </div>
-            @if(session('user_role') === 'admin')
-            <div class="row g-3 mt-3">
-                <div class="col-md-3">
-                    <label class="form-label">Departemen</label>
-                    <select name="department_id" class="form-select">
-                        <option value="">Semua Departemen</option>
-                        @foreach($departments ?? [] as $dept)
-                        <option value="{{ $dept['id'] }}" {{ request('department_id') === $dept['id'] ? 'selected' : '' }}>{{ $dept['nama'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            <div>
+                <label class="text-label-sm font-label-md text-secondary mb-xs block">Jenis Cuti</label>
+                <select name="leave_type_id" class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm">
+                    <option value="">Semua Jenis</option>
+                    @foreach($leaveTypes ?? [] as $lt)
+                        <option value="{{ $lt['id'] }}" {{ request('leave_type_id') == $lt['id'] ? 'selected' : '' }}>{{ $lt['nama'] }}</option>
+                    @endforeach
+                </select>
             </div>
-            @endif
-            <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-2"></i>Tampilkan
-                </button>
-                <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
-                </a>
+            <div>
+                <label class="text-label-sm font-label-md text-secondary mb-xs block">Dari Tanggal</label>
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm">
             </div>
-        </form>
-    </div>
-</div>
+            <div>
+                <label class="text-label-sm font-label-md text-secondary mb-xs block">Sampai Tanggal</label>
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm">
+            </div>
+        </div>
+
+        @if(session('user_role') === 'admin')
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+            <div>
+                <label class="text-label-sm font-label-md text-secondary mb-xs block">Departemen</label>
+                <select name="department_id" class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm">
+                    <option value="">Semua Departemen</option>
+                    @foreach($departments ?? [] as $dept)
+                        <option value="{{ $dept['id'] }}" {{ request('department_id') == $dept['id'] ? 'selected' : '' }}>{{ $dept['nama'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        @endif
+
+        <div class="flex items-center gap-sm pt-md border-t border-outline-variant">
+            <button type="submit" class="flex items-center gap-xs px-lg py-sm bg-primary text-on-primary rounded-xl font-label-md hover:opacity-90 transition-all active:scale-95">
+                <span class="material-symbols-outlined" style="font-size: 18px;">search</span>
+                Tampilkan
+            </button>
+            <a href="{{ route('reports.index') }}" class="flex items-center gap-xs px-lg py-sm border border-outline-variant rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container-low transition-all active:scale-95 no-underline">
+                <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+                Reset
+            </a>
+        </div>
+    </form>
+</section>
 
 <!-- Export Buttons -->
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h6 class="mb-1"><i class="bi bi-download me-2"></i>Export Laporan</h6>
-                <small class="text-muted">Download laporan dalam format yang Anda inginkan</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('reports.export', ['format' => 'csv'] + request()->query()) }}" class="btn btn-sm btn-success">
-                    <i class="bi bi-filetype-csv me-1"></i>CSV
-                </a>
-                <a href="{{ route('reports.export', ['format' => 'excel'] + request()->query()) }}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                </a>
-                <a href="{{ route('reports.export', ['format' => 'pdf'] + request()->query()) }}" class="btn btn-sm btn-danger">
-                    <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Table -->
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
+<section class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm mb-lg">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-md">
         <div>
-            <i class="bi bi-table me-2"></i>Data Laporan
+            <h3 class="text-label-md font-label-md text-on-background flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary" style="font-size: 20px;">download</span>
+                Export Laporan
+            </h3>
+            <p class="text-body-sm text-secondary mt-xs">Download laporan dalam format yang Anda inginkan</p>
         </div>
-        <span class="badge bg-primary">{{ count($reports) }} data</span>
+        <div class="flex items-center gap-sm">
+            <a href="{{ route('reports.export', ['format' => 'csv'] + request()->query()) }}" class="flex items-center gap-xs px-md py-sm bg-green-100 text-green-700 rounded-xl font-label-sm hover:bg-green-200 transition-all active:scale-95 no-underline">
+                <span class="material-symbols-outlined" style="font-size: 18px;">table_view</span>
+                CSV
+            </a>
+            <a href="{{ route('reports.export', ['format' => 'excel'] + request()->query()) }}" class="flex items-center gap-xs px-md py-sm bg-primary/10 text-primary rounded-xl font-label-sm hover:bg-primary/20 transition-all active:scale-95 no-underline">
+                <span class="material-symbols-outlined" style="font-size: 18px;">description</span>
+                Excel
+            </a>
+            <a href="{{ route('reports.export', ['format' => 'pdf'] + request()->query()) }}" class="flex items-center gap-xs px-md py-sm bg-error-container/20 text-error rounded-xl font-label-sm hover:bg-error-container/30 transition-all active:scale-95 no-underline">
+                <span class="material-symbols-outlined" style="font-size: 18px;">picture_as_pdf</span>
+                PDF
+            </a>
+        </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th style="width: 50px;">No</th>
-                        <th>Karyawan</th>
-                        <th>Departemen</th>
-                        <th>Jenis Cuti</th>
-                        <th>Tanggal Mulai</th>
-                        <th>Tanggal Selesai</th>
-                        <th style="width: 80px;">Hari</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
+</section>
+
+<!-- Table Container -->
+<section class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+    <div class="p-lg border-b border-outline-variant flex items-center justify-between">
+        <div class="flex items-center gap-md">
+            <h3 class="text-label-md font-label-md text-on-background flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary" style="font-size: 20px;">table_view</span>
+                Data Laporan
+            </h3>
+            <span class="px-2 py-1 bg-primary/10 text-primary text-label-sm rounded-full">{{ count($reports) }} data</span>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-surface-container-lowest text-secondary uppercase text-[11px] tracking-wider font-semibold">
+                    <th class="px-lg py-md border-b border-outline-variant w-16">No</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Karyawan</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Departemen</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Jenis Cuti</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Tanggal Mulai</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Tanggal Selesai</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Hari</th>
+                    <th class="px-lg py-md border-b border-outline-variant">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @forelse($reports as $i => $r)
                     @php
-                        $statusColors = [
-                            'pending' => 'warning',
-                            'disetujui' => 'success',
-                            'ditolak' => 'danger',
-                            'dibatalkan' => 'secondary'
+                        $statusStyles = [
+                            'pending' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-600', 'icon' => 'schedule'],
+                            'disetujui' => ['bg' => 'bg-green-100', 'text' => 'text-green-600', 'icon' => 'check_circle'],
+                            'ditolak' => ['bg' => 'bg-error-container', 'text' => 'text-error', 'icon' => 'cancel'],
+                            'dibatalkan' => ['bg' => 'bg-surface-container-highest', 'text' => 'text-secondary', 'icon' => 'block'],
                         ];
-                        $statusIcons = [
-                            'pending' => 'bi-clock',
-                            'disetujui' => 'bi-check-circle',
-                            'ditolak' => 'bi-x-circle',
-                            'dibatalkan' => 'bi-slash-circle'
-                        ];
+                        $status = $r['status'] ?? '';
+                        $style = $statusStyles[$status] ?? $statusStyles['pending'];
                     @endphp
-                    @forelse($reports as $i => $r)
-                    <tr>
-                        <td class="text-muted">{{ $i + 1 }}</td>
-                        <td>
-                            <div class="fw-semibold">{{ $r['user_name'] ?? '-' }}</div>
+                    <tr class="hover:bg-primary-container/5 transition-colors group">
+                        <td class="px-lg py-md text-body-sm text-secondary">{{ $i + 1 }}</td>
+                        <td class="px-lg py-md">
+                            <span class="text-body-sm font-label-md text-on-background">{{ $r['user_name'] ?? '-' }}</span>
                         </td>
-                        <td>{{ $r['department_name'] ?? '-' }}</td>
-                        <td>{{ $r['leave_type_name'] ?? '-' }}</td>
-                        <td>{{ $r['tanggal_mulai'] ?? '-' }}</td>
-                        <td>{{ $r['tanggal_selesai'] ?? '-' }}</td>
-                        <td>
-                            <span class="badge bg-info">{{ $r['total_hari'] ?? 0 }}</span>
+                        <td class="px-lg py-md text-body-sm text-on-surface-variant">{{ $r['department_name'] ?? '-' }}</td>
+                        <td class="px-lg py-md text-body-sm text-on-surface-variant">{{ $r['leave_type_name'] ?? '-' }}</td>
+                        <td class="px-lg py-md text-body-sm text-secondary">{{ $r['tanggal_mulai'] ?? '-' }}</td>
+                        <td class="px-lg py-md text-body-sm text-secondary">{{ $r['tanggal_selesai'] ?? '-' }}</td>
+                        <td class="px-lg py-md">
+                            <span class="px-2 py-1 bg-primary/10 text-primary text-label-sm rounded-full">{{ $r['total_hari'] ?? 0 }}</span>
                         </td>
-                        <td>
-                            @php
-                                $status = $r['status'] ?? '';
-                                $color = $statusColors[$status] ?? 'secondary';
-                                $icon = $statusIcons[$status] ?? 'bi-circle';
-                            @endphp
-                            <span class="badge bg-{{ $color }}">
-                                <i class="bi {{ $icon }} me-1"></i>{{ ucfirst($status ?: '-') }}
+                        <td class="px-lg py-md">
+                            <span class="inline-flex items-center gap-xs px-3 py-1 {{ $style['bg'] }} {{ $style['text'] }} text-label-sm font-label-sm rounded-full">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">{{ $style['icon'] }}</span>
+                                {{ ucfirst($status ?: '-') }}
                             </span>
                         </td>
                     </tr>
-                    @empty
+                @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5">
-                            <div class="empty-state">
-                                <i class="bi bi-file-earmark-text" style="font-size: 4rem; color: #d1d5db;"></i>
-                                <h6 class="mt-3 mb-2 text-muted">Tidak Ada Data</h6>
-                                <p class="text-muted mb-0">Belum ada laporan yang sesuai dengan filter yang dipilih</p>
+                        <td colspan="8" class="px-lg py-12 text-center">
+                            <div class="flex flex-col items-center gap-md">
+                                <span class="material-symbols-outlined text-6xl text-on-surface-variant/30">description</span>
+                                <p class="text-body-md font-body-md text-on-surface-variant">Tidak Ada Data</p>
+                                <p class="text-body-sm text-secondary">Belum ada laporan yang sesuai dengan filter yang dipilih</p>
                             </div>
                         </td>
                     </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                @endforelse
+            </tbody>
+        </table>
     </div>
-</div>
+</section>
 @endsection
-
-@push('styles')
-<style>
-    .table thead th {
-        background: #f9fafb;
-        border-bottom: 2px solid #e5e7eb;
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: #374151;
-        padding: 1rem 0.75rem;
-    }
-    .table tbody td {
-        padding: 1rem 0.75rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #f3f4f6;
-    }
-    .table-hover tbody tr:hover {
-        background: #f9fafb;
-    }
-    .badge {
-        font-weight: 500;
-        padding: 0.4rem 0.75rem;
-        font-size: 0.8125rem;
-    }
-</style>
-@endpush

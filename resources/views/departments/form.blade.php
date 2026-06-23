@@ -3,65 +3,92 @@
 @section('title', isset($department) ? 'Edit Departemen' : 'Tambah Departemen')
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">{{ isset($department) ? 'Edit Departemen' : 'Tambah Departemen' }}</h1>
-    <p class="page-subtitle">{{ isset($department) ? 'Perbarui data departemen' : 'Tambah departemen baru' }}</p>
-</div>
+<!-- Page Header -->
+<section class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-lg">
+    <div>
+        <h2 class="text-headline-lg font-headline-lg text-on-background flex items-center gap-sm">
+            <span class="material-symbols-outlined text-primary" style="font-size: 32px;">
+                {{ isset($department) ? 'edit' : 'add_circle' }}
+            </span>
+            {{ isset($department) ? 'Edit Departemen' : 'Tambah Departemen' }}
+        </h2>
+        <p class="text-body-md font-body-md text-secondary mt-xs">
+            {{ isset($department) ? 'Perbarui informasi departemen' : 'Buat departemen baru dalam organisasi' }}
+        </p>
+    </div>
+    <a href="{{ route('departments.index') }}" class="flex items-center gap-sm px-lg py-md bg-surface-container text-on-surface-variant rounded-xl font-label-md hover:bg-surface-container-high transition-all active:scale-95 no-underline">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Kembali
+    </a>
+</section>
 
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-body">
-                <form action="{{ isset($department) ? route('departments.update', $department['id']) : route('departments.store') }}" method="POST">
-                    @csrf
-                    @if(isset($department))
-                        @method('PUT')
-                    @endif
+<!-- Form Container -->
+<section class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden max-w-4xl">
+    <form action="{{ isset($department) ? route('departments.update', $department['id']) : route('departments.store') }}" method="POST" class="p-lg space-y-lg">
+        @csrf
+        @if(isset($department))
+            @method('PUT')
+        @endif
 
-                    <div class="mb-4">
-                        <label for="kode" class="form-label">Kode Departemen <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('kode') is-invalid @enderror" id="kode" name="kode"
-                               value="{{ old('kode', $department['kode'] ?? '') }}" required maxlength="20">
-                        @error('kode') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="nama" class="form-label">Nama Departemen <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('nama') is-invalid @enderror" id="nama" name="nama"
-                               value="{{ old('nama', $department['nama'] ?? '') }}" required maxlength="100">
-                        @error('nama') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="manager_id" class="form-label">Manager</label>
-                        <select class="form-select @error('manager_id') is-invalid @enderror" id="manager_id" name="manager_id">
-                            <option value="">-- Pilih Manager --</option>
-                            @foreach($managers ?? [] as $m)
-                            <option value="{{ $m['id'] }}" {{ old('manager_id', $department['manager_id'] ?? '') === $m['id'] ? 'selected' : '' }}>
-                                {{ $m['full_name'] }}
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('manager_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="deskripsi" class="form-label">Deskripsi</label>
-                        <textarea class="form-control @error('deskripsi') is-invalid @enderror" id="deskripsi" name="deskripsi" rows="3">{{ old('deskripsi', $department['deskripsi'] ?? '') }}</textarea>
-                        @error('deskripsi') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>{{ isset($department) ? 'Simpan Perubahan' : 'Tambah Departemen' }}
-                        </button>
-                        <a href="{{ route('departments.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle me-2"></i>Batal
-                        </a>
-                    </div>
-                </form>
+        <!-- Kode & Nama -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+            <div>
+                <label class="text-label-md font-label-md text-on-surface mb-sm block">
+                    Kode Departemen <span class="text-error">*</span>
+                </label>
+                <input type="text" name="kode" value="{{ old('kode', $department['kode'] ?? '') }}" required maxlength="20"
+                       class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm @error('kode') border-error @enderror">
+                @error('kode')
+                    <p class="text-error text-label-sm mt-xs">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="text-label-md font-label-md text-on-surface mb-sm block">
+                    Nama Departemen <span class="text-error">*</span>
+                </label>
+                <input type="text" name="nama" value="{{ old('nama', $department['nama'] ?? '') }}" required maxlength="100"
+                       class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm @error('nama') border-error @enderror">
+                @error('nama')
+                    <p class="text-error text-label-sm mt-xs">{{ $message }}</p>
+                @enderror
             </div>
         </div>
-    </div>
-</div>
+
+        <!-- Manager -->
+        <div>
+            <label class="text-label-md font-label-md text-on-surface mb-sm block">Manager</label>
+            <select name="manager_id" class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm @error('manager_id') border-error @enderror">
+                <option value="">-- Pilih Manager --</option>
+                @foreach($managers ?? [] as $m)
+                    <option value="{{ $m['id'] }}" {{ old('manager_id', $department['manager_id'] ?? '') == $m['id'] ? 'selected' : '' }}>
+                        {{ $m['full_name'] }}
+                    </option>
+                @endforeach
+            </select>
+            @error('manager_id')
+                <p class="text-error text-label-sm mt-xs">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <!-- Deskripsi -->
+        <div>
+            <label class="text-label-md font-label-md text-on-surface mb-sm block">Deskripsi</label>
+            <textarea name="deskripsi" rows="4"
+                      class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm @error('deskripsi') border-error @enderror">{{ old('deskripsi', $department['deskripsi'] ?? '') }}</textarea>
+            @error('deskripsi')
+                <p class="text-error text-label-sm mt-xs">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-sm pt-lg border-t border-outline-variant">
+            <a href="{{ route('departments.index') }}" class="px-lg py-md bg-surface-container text-on-surface-variant rounded-xl font-label-md hover:bg-surface-container-high transition-all active:scale-95 no-underline">
+                Batal
+            </a>
+            <button type="submit" class="px-lg py-md bg-primary text-on-primary rounded-xl font-label-md shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+                {{ isset($department) ? 'Simpan Perubahan' : 'Tambah Departemen' }}
+            </button>
+        </div>
+    </form>
+</section>
 @endsection

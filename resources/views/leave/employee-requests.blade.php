@@ -23,7 +23,7 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Filter</button>
+                <button type="submit" class="btn btn-sm btn-primary"><span class="material-symbols-outlined me-1">search</span>Filter</button>
                 <a href="{{ route('leave.employee-requests') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
             </div>
         </form>
@@ -73,7 +73,7 @@
                         <td>{{ \Carbon\Carbon::parse($leave['created_at'])->format('d M Y') }}</td>
                         <td>
                             <a href="{{ route('leave.show', $leave['id']) }}" class="btn btn-sm btn-outline-primary" title="Detail">
-                                <i class="bi bi-eye"></i>
+                                <span class="material-symbols-outlined">visibility</span>
                             </a>
                         </td>
                     </tr>

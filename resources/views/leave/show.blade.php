@@ -23,7 +23,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-file-earmark-text me-2"></i>Informasi Pengajuan</span>
+                <span><span class="material-symbols-outlined-text me-2">description</span>Informasi Pengajuan</span>
                 <span class="badge bg-{{ $statusColors[$leave->status ?? ''] ?? 'secondary' }} fs-6">
                     {{ ucfirst($leave->status ?? '-') }}
                 </span>
@@ -63,7 +63,7 @@
                     <div class="col-sm-8">
                         @if($signedUrl)
                             <a href="{{ $signedUrl }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-download me-1"></i>Lihat / Unduh Lampiran
+                                <span class="material-symbols-outlined me-1">download</span>Lihat / Unduh Lampiran
                             </a>
                         @else
                             <span class="text-muted">File tidak tersedia</span>
@@ -77,7 +77,7 @@
         @if(!empty($leave->alasan_penolakan))
         <div class="card border-danger">
             <div class="card-header text-danger">
-                <i class="bi bi-x-circle me-2"></i>Alasan Penolakan
+                <span class="material-symbols-outlined me-2">cancel</span>Alasan Penolakan
             </div>
             <div class="card-body">
                 <p class="mb-0">{{ $leave->alasan_penolakan }}</p>
@@ -89,7 +89,7 @@
     <div class="col-lg-4">
         <!-- Status Timeline -->
         <div class="card">
-            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Status</div>
+            <div class="card-header"><span class="material-symbols-outlined me-2">schedule</span>Status</div>
             <div class="card-body">
                 <div class="mb-3">
                     <small class="text-muted">Diajukan pada</small>
@@ -121,10 +121,10 @@
         <div class="card">
             <div class="card-body">
                 <a href="{{ route('leave.edit', $leave->id) }}" class="btn btn-warning w-100 mb-2">
-                    <i class="bi bi-pencil me-2"></i>Edit Pengajuan
+                    <span class="material-symbols-outlined me-2">edit</span>Edit Pengajuan
                 </a>
                 <button type="button" class="btn btn-outline-danger w-100" onclick="cancelLeave()">
-                    <i class="bi bi-x-circle me-2"></i>Batalkan
+                    <span class="material-symbols-outlined me-2">cancel</span>Batalkan
                 </button>
             </div>
         </div>

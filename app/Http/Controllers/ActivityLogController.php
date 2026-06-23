@@ -29,19 +29,25 @@ class ActivityLogController extends Controller
             'offset' => $request->offset ?? 0,
         ];
 
-        if ($request->filled('user_id')) {
+        if ($request->filled('user_id') && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $request->user_id)) {
             $options['user_id'] = $request->user_id;
         }
         if ($request->filled('aksi')) {
-            $options['aksi'] = $request->aksi;
+            $allowedAksi = ['login', 'logout', 'create', 'update', 'delete', 'approve', 'reject', '2fa_verify'];
+            if (in_array($request->aksi, $allowedAksi, true)) {
+                $options['aksi'] = $request->aksi;
+            }
         }
         if ($request->filled('model_type')) {
-            $options['model_type'] = $request->model_type;
+            $allowedModels = ['profile', 'leave_request', 'department', 'leave_type'];
+            if (in_array($request->model_type, $allowedModels, true)) {
+                $options['model_type'] = $request->model_type;
+            }
         }
-        if ($request->filled('date_from')) {
+        if ($request->filled('date_from') && preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->date_from)) {
             $options['date_from'] = $request->date_from;
         }
-        if ($request->filled('date_to')) {
+        if ($request->filled('date_to') && preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->date_to)) {
             $options['date_to'] = $request->date_to;
         }
 

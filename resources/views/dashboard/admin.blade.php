@@ -1,134 +1,143 @@
-<!-- Stats Cards Row 1 -->
-<div class="row g-3">
-    <div class="col-md-4">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #4F46E5, #4338CA);">
-            <div class="stats-icon">
-                <i class="bi bi-people"></i>
-            </div>
-            <div class="stats-value">{{ $totalUsers ?? 0 }}</div>
-            <div class="stats-label">Total Pengguna</div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #10B981, #059669);">
-            <div class="stats-icon">
-                <i class="bi bi-building"></i>
-            </div>
-            <div class="stats-value">{{ $totalDepartments ?? 0 }}</div>
-            <div class="stats-label">Departemen</div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">
-            <div class="stats-icon">
-                <i class="bi bi-check-circle"></i>
-            </div>
-            <div class="stats-value">{{ $approvedCount ?? 0 }}</div>
-            <div class="stats-label">Disetujui</div>
-        </div>
-    </div>
+<!-- Page Title Section -->
+<div class="mb-lg">
+    <h2 class="text-headline-lg font-headline-lg text-on-background">Ringkasan Dashboard</h2>
+    <p class="text-body-md font-body-md text-secondary">Pantau data dan laporan terbaru.</p>
 </div>
 
-<!-- Stats Cards Row 2 -->
-<div class="row g-3 mt-0">
-    <div class="col-md-6">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
-            <div class="stats-icon">
-                <i class="bi bi-clock-history"></i>
-            </div>
-            <div class="stats-value">{{ $pendingCount ?? 0 }}</div>
-            <div class="stats-label">Pending Approval</div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card stats-card" style="background: linear-gradient(135deg, #EF4444, #DC2626);">
-            <div class="stats-icon">
-                <i class="bi bi-calendar-x"></i>
-            </div>
-            <div class="stats-value">{{ $rejectedCount ?? 0 }}</div>
-            <div class="stats-label">Ditolak Bulan Ini</div>
-        </div>
-    </div>
-</div>
-
-<!-- Trend Chart -->
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-graph-up me-2"></i> Trend Pengajuan (6 Bulan Terakhir)
-            </div>
-            <div class="card-body">
-                <div style="height: 300px;">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Activity Logs -->
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-            <i class="bi bi-activity me-2"></i> Aktivitas Terbaru
-        </div>
-        <a href="{{ route('activity-logs.index') }}" class="btn btn-sm btn-outline-primary">
-            Lihat Semua
-        </a>
-    </div>
-    <div class="card-body">
-        @forelse($recentLogs ?? [] as $log)
-        @php
-            $aksi = $log['aksi'] ?? '';
-            $iconClass = match(true) {
-                str_contains($aksi, 'login') || str_contains($aksi, 'logout') => 'act-login',
-                str_contains($aksi, 'create') => 'act-create',
-                str_contains($aksi, 'approve') => 'act-approve',
-                str_contains($aksi, 'reject') => 'act-reject',
-                str_contains($aksi, 'update') => 'act-update',
-                str_contains($aksi, 'delete') => 'act-delete',
-                default => 'act-default',
-            };
-        @endphp
-        <div class="activity-item">
-            <div class="activity-icon {{ $iconClass }}">
-                @if($log['aksi'] === 'login')
-                    <i class="bi bi-box-arrow-in-right"></i>
-                @elseif($log['aksi'] === 'logout')
-                    <i class="bi bi-box-arrow-right"></i>
-                @elseif(str_contains($log['aksi'], 'create'))
-                    <i class="bi bi-plus"></i>
-                @elseif(str_contains($log['aksi'], 'update'))
-                    <i class="bi bi-pencil"></i>
-                @elseif(str_contains($log['aksi'], 'delete'))
-                    <i class="bi bi-trash"></i>
-                @elseif(str_contains($log['aksi'], 'approve'))
-                    <i class="bi bi-check"></i>
-                @elseif(str_contains($log['aksi'], 'reject'))
-                    <i class="bi bi-x"></i>
-                @else
-                    <i class="bi bi-circle"></i>
-                @endif
-            </div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+    <!-- Total Pengguna -->
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-8 -mt-8 group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="flex justify-between items-start relative z-10">
             <div>
-                <div class="activity-text">
-                    <strong>{{ $log['user']['full_name'] ?? 'System' }}</strong>
-                    — {{ $log['deskripsi'] }}
-                </div>
-                <div class="activity-time">
-                    {{ \Carbon\Carbon::parse($log['created_at'])->diffForHumans() }}
-                </div>
+                <p class="text-label-sm font-label-md text-secondary uppercase tracking-wider">TOTAL PENGGUNA</p>
+                <h3 class="text-headline-lg font-headline-lg text-on-background mt-sm">{{ $totalUsers ?? 0 }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+                <span class="material-symbols-outlined">group</span>
             </div>
         </div>
-        @empty
-        <div class="empty-state">
-            <i class="bi bi-inbox"></i>
-            <p>Belum ada aktivitas</p>
+        <div class="mt-lg flex items-center gap-xs text-label-sm font-label-sm">
+            <span class="text-primary font-bold">Stabil</span>
+            <span class="text-secondary">sejak bulan lalu</span>
         </div>
-        @endforelse
+    </div>
+
+    <!-- Departemen -->
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-secondary-container/10 rounded-full -mr-8 -mt-8 group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <p class="text-label-sm font-label-md text-secondary uppercase tracking-wider">DEPARTEMEN</p>
+                <h3 class="text-headline-lg font-headline-lg text-on-background mt-sm">{{ $totalDepartments ?? 0 }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+                <span class="material-symbols-outlined">domain</span>
+            </div>
+        </div>
+        <div class="mt-lg flex items-center gap-xs text-label-sm font-label-sm text-secondary">
+            <span class="font-bold">Unit aktif</span>
+        </div>
+    </div>
+
+    <!-- Cuti Disetujui -->
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <p class="text-label-sm font-label-md text-secondary uppercase tracking-wider">CUTI DISETUJUI</p>
+                <h3 class="text-headline-lg font-headline-lg text-on-background mt-sm">{{ $approvedCount ?? 0 }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                <span class="material-symbols-outlined">check_circle</span>
+            </div>
+        </div>
+        <div class="mt-lg flex items-center gap-xs text-label-sm font-label-sm text-green-600">
+            <span class="font-bold">Telah diproses</span>
+        </div>
+    </div>
+
+    <!-- Cuti Menunggu -->
+    <div class="glass-card p-lg rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-error-container/10 rounded-full -mr-8 -mt-8 group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <p class="text-label-sm font-label-md text-secondary uppercase tracking-wider">CUTI MENUNGGU</p>
+                <h3 class="text-headline-lg font-headline-lg text-on-background mt-sm">{{ $pendingCount ?? 0 }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-error-container flex items-center justify-center text-error shrink-0">
+                <span class="material-symbols-outlined">pending_actions</span>
+            </div>
+        </div>
+        <div class="mt-lg flex items-center gap-xs text-label-sm font-label-sm text-on-surface-variant">
+            <span class="font-bold">{{ ($pendingCount ?? 0) > 0 ? 'Perlu tindakan' : 'Tidak ada tindakan' }}</span>
+        </div>
     </div>
 </div>
+
+<!-- Recent Activity Section -->
+<div class="grid grid-cols-1 gap-gutter">
+    <div class="space-y-gutter">
+        <section class="glass-card rounded-2xl border border-outline-variant shadow-sm overflow-hidden transition-all">
+            <div class="px-lg py-md border-b border-outline-variant bg-surface-container-low/50">
+                <h4 class="text-headline-md font-headline-md text-on-background">Aktivitas Terbaru</h4>
+            </div>
+            <div class="divide-y divide-outline-variant/30">
+                @forelse($recentLogs ?? [] as $log)
+                    @php
+                        $iconMap = [
+                            'login' => ['icon' => 'login', 'bg' => 'bg-secondary-fixed', 'text' => 'text-secondary'],
+                            'logout' => ['icon' => 'logout', 'bg' => 'bg-secondary-fixed', 'text' => 'text-secondary'],
+                            'create' => ['icon' => 'add_circle', 'bg' => 'bg-green-100', 'text' => 'text-green-600'],
+                            'update' => ['icon' => 'edit', 'bg' => 'bg-primary-fixed-dim', 'text' => 'text-primary'],
+                            'delete' => ['icon' => 'delete', 'bg' => 'bg-error-container', 'text' => 'text-error'],
+                            'approve' => ['icon' => 'verified_user', 'bg' => 'bg-primary-fixed-dim', 'text' => 'text-primary'],
+                            'reject' => ['icon' => 'cancel', 'bg' => 'bg-error-container', 'text' => 'text-error'],
+                        ];
+                        $aksi = $log['aksi'] ?? 'update';
+                        $iconData = $iconMap[$aksi] ?? ['icon' => 'info', 'bg' => 'bg-surface-container', 'text' => 'text-secondary'];
+                    @endphp
+                    <div class="p-lg hover:bg-surface-container-lowest transition-colors flex gap-md items-center py-lg">
+                        <div class="w-10 h-10 rounded-full {{ $iconData['bg'] }} flex items-center justify-center {{ $iconData['text'] }} shrink-0">
+                            <span class="material-symbols-outlined">{{ $iconData['icon'] }}</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <p class="text-body-md font-body-md text-on-surface">
+                                    <span class="font-bold">{{ $log['user']['full_name'] ?? 'Sistem' }}:</span> {{ $log['deskripsi'] }}
+                                </p>
+                                <span class="text-label-sm font-label-sm text-secondary whitespace-nowrap ml-sm">{{ \Carbon\Carbon::parse($log['created_at'])->diffForHumans() }}</span>
+                            </div>
+                            <p class="text-body-sm font-body-sm text-on-surface-variant mt-xs">{{ $log['detail'] ?? 'Detail aktivitas tercatat dalam sistem.' }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-lg text-center">
+                        <span class="material-symbols-outlined text-6xl text-on-surface-variant/30 mb-4 block">history</span>
+                        <p class="text-body-md text-on-surface-variant">Belum ada aktivitas</p>
+                    </div>
+                @endforelse
+            </div>
+            <div class="px-lg py-md border-t border-outline-variant bg-surface-container-low/50">
+                <a href="{{ route('activity-logs.index') }}" class="flex items-center justify-center gap-sm w-full py-md bg-primary text-on-primary rounded-xl font-label-md text-label-md hover:bg-primary-container transition-all active:scale-95 no-underline">
+                    <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+                    Lihat Semua Aktivitas
+                </a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    // Micro-interactions for cards
+    document.querySelectorAll('.glass-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-4px)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+        });
+        card.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease';
+    });
+</script>

@@ -38,6 +38,12 @@ class CaptchaService
      */
     public function create(): string
     {
+        // Probabilistic cleanup: run bulk cleanup every ~20 requests
+        // to prevent unbounded growth of expired captcha_sessions
+        if (random_int(1, 20) === 1) {
+            $this->cleanupExpired();
+        }
+
         $text = $this->generateText();
         $sessionKey = Str::random(64);
         $ipAddress = request()->ip();
@@ -180,6 +186,19 @@ class CaptchaService
     {
         if ($sessionKey) {
             $this->supabase->delete('captcha_sessions', ['session_key' => $sessionKey], true);
+        }
+    }
+
+    /**
+     * Bulk cleanup all expired captcha sessions via Supabase RPC.
+     * Prevents unbounded table growth from repeated page loads.
+     */
+    public function cleanupExpired(): void
+    {
+        try {
+            $this->supabase->rpc('cleanup_expired_captcha', [], true);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Captcha bulk cleanup failed: ' . $e->getMessage());
         }
     }
 

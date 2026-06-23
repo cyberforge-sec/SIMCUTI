@@ -17,8 +17,8 @@ use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Redirect root to login
-Route::get('/', fn () => redirect()->route('login'));
+// Show login page on root (avoids 302 redirect which can drop URL fragments like Supabase access_token)
+Route::get('/', [AuthController::class, 'showLogin']);
 
 // ============================================
 // GUEST ROUTES (not authenticated)
@@ -99,7 +99,9 @@ Route::middleware(['supabase.auth', '2fa'])->group(function () {
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::post('/settings/2fa', [SettingsController::class, 'toggle2FA'])->name('settings.2fa');
-    Route::put('/settings/password', [SettingsController::class, 'changePassword'])->name('settings.password');
+    Route::put('/settings/password', [SettingsController::class, 'changePassword'])
+        ->name('settings.password')
+        ->middleware('throttle:5,15'); // Max 5 attempts per 15 minutes
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -130,4 +132,12 @@ Route::middleware(['supabase.auth', '2fa'])->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         Route::get('/activity-logs/data', [ActivityLogController::class, 'data'])->name('activity-logs.data');
     });
+});
+
+Route::get('/clear-cache', function() {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+    }
+    return 'All caches and OPCache have been cleared!';
 });

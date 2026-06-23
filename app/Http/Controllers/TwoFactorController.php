@@ -59,16 +59,39 @@ class TwoFactorController extends Controller
             'used' => 'false',
         ]);
 
+        Log::info('2FA verify: codes found', [
+            'user_id' => $userId,
+            'count' => count($codes),
+            'input_code_prefix' => substr($request->code, 0, 2) . '****',
+        ]);
+
         $validCode = null;
+        $expiredCount = 0;
+
         foreach ($codes as $code) {
-            if (strtotime($code['expires_at']) <= time()) continue;
-            if ($code['kode'] === $request->code) {
+            $expiresAt = strtotime($code['expires_at']);
+            $now = time();
+
+            if ($expiresAt <= $now) {
+                $expiredCount++;
+                continue;
+            }
+
+            // Use hash_equals() to prevent timing attacks
+            if (hash_equals($code['kode'], $request->code)) {
                 $validCode = $code;
                 break;
             }
         }
 
         if (!$validCode) {
+            Log::warning('2FA verify failed', [
+                'user_id' => $userId,
+                'total_unused_codes' => count($codes),
+                'expired_count' => $expiredCount,
+                'input_code_prefix' => substr($request->code, 0, 2) . '****',
+            ]);
+
             $attempts++;
             Cache::put($rateKey, $attempts, now()->addMinutes(15));
 
@@ -77,7 +100,16 @@ class TwoFactorController extends Controller
                 return back()->withErrors(['code' => 'Terlalu banyak percobaan gagal. Kode dikunci selama 15 menit.']);
             }
 
-            return back()->withErrors(['code' => 'Kode verifikasi tidak valid atau sudah kadaluarsa.']);
+            // Give user a more helpful error message
+            if (count($codes) === 0) {
+                return back()->withErrors(['code' => 'Kode tidak ditemukan. Silakan klik "Kirim Ulang Kode" untuk mendapatkan kode baru.']);
+            }
+
+            if ($expiredCount === count($codes)) {
+                return back()->withErrors(['code' => 'Kode sudah kadaluarsa. Silakan klik "Kirim Ulang Kode" untuk mendapatkan kode baru.']);
+            }
+
+            return back()->withErrors(['code' => 'Kode yang Anda masukkan salah. Periksa kembali 6 digit kode dari email.']);
         }
 
         Cache::forget($rateKey);
@@ -88,8 +120,9 @@ class TwoFactorController extends Controller
             'used' => true,
         ], true);
 
-        // Set session as 2FA verified
+        // Set session as 2FA verified with timestamp for server-side validation
         Session::put('2fa_verified', true);
+        Session::put('2fa_verified_at', now()->toIso8601String());
 
         $this->activityLog->log('2fa_verify', 'Verifikasi 2FA berhasil');
 
@@ -99,7 +132,8 @@ class TwoFactorController extends Controller
     public function resend()
     {
         $userId = Session::get('user_id');
-        $resendCount = Session::get('2fa_resend_count', 0);
+        $rateKey = '2fa_resend:' . md5($userId);
+        $resendCount = (int) Cache::get($rateKey, 0);
 
         if ($resendCount >= 3) {
             return back()->withErrors(['code' => 'Anda telah mencapai batas pengiriman ulang kode. Silakan login kembali.']);
@@ -117,7 +151,7 @@ class TwoFactorController extends Controller
             'user_id' => $userId,
             'kode' => $code,
             'used' => false,
-            'expires_at' => now()->addMinutes(5)->toIso8601String(),
+            'expires_at' => now()->addMinutes(10)->toIso8601String(),
         ], true);
 
         try {
@@ -128,7 +162,7 @@ class TwoFactorController extends Controller
             Log::error('Failed to send 2FA resend email: ' . $e->getMessage());
         }
 
-        Session::put('2fa_resend_count', $resendCount + 1);
+        Cache::put($rateKey, $resendCount + 1, now()->addHours(1));
 
         return back()->with('success', 'Kode verifikasi baru telah dikirim ke email Anda.');
     }

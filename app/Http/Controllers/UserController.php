@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Services\ActivityLogService;
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class UserController extends Controller
 {
@@ -17,12 +19,13 @@ class UserController extends Controller
         $this->activityLog = $activityLog;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $users = $this->supabase->selectAdvanced('profiles', [
+        // Single query — ambil semua data sekaligus
+        $allUsers = collect($this->supabase->selectAdvanced('profiles', [
             'columns' => '*',
             'order' => 'full_name.asc',
-        ]);
+        ]));
 
         // Enrich with department names
         $departments = $this->supabase->select('departments', 'id,nama', ['is_active' => 'true']);
@@ -31,11 +34,60 @@ class UserController extends Controller
             $deptMap[$d['id']] = $d['nama'];
         }
 
-        foreach ($users as &$user) {
+        $allUsers = $allUsers->map(function ($user) use ($deptMap) {
             $user['department_name'] = $deptMap[$user['department_id'] ?? ''] ?? '-';
+            return $user;
+        });
+
+        // Stats (dari data keseluruhan, sebelum filter)
+        $stats = [
+            'total' => $allUsers->count(),
+            'active' => $allUsers->where('is_active', true)->count(),
+            'inactive' => $allUsers->where('is_active', false)->count(),
+        ];
+
+        // Apply filters
+        $filtered = $allUsers;
+
+        // Search filter
+        if ($search = $request->input('search')) {
+            $searchLower = strtolower($search);
+            $filtered = $filtered->filter(function ($user) use ($searchLower) {
+                return str_contains(strtolower($user['full_name'] ?? ''), $searchLower)
+                    || str_contains(strtolower($user['email'] ?? ''), $searchLower);
+            });
         }
 
-        return view('users.index', compact('users'));
+        // Role filter
+        if ($role = $request->input('role')) {
+            $filtered = $filtered->where('role', $role);
+        }
+
+        // Status filter
+        if ($request->has('status') && $request->input('status') !== '') {
+            $status = $request->input('status');
+            if ($status === 'active') {
+                $filtered = $filtered->where('is_active', true);
+            } elseif ($status === 'inactive') {
+                $filtered = $filtered->where('is_active', false);
+            }
+        }
+
+        // Manual pagination
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $total = $filtered->count();
+        $items = $filtered->forPage($currentPage, $perPage)->values();
+
+        $paginatedUsers = new LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('users.index', compact('paginatedUsers', 'stats'));
     }
 
     public function create()
