@@ -349,7 +349,9 @@ class AuthController extends Controller
         ], true);
 
         try {
-            Mail::to($email)->send(new TwoFactorCodeMail($code, $userName));
+            retry(2, function () use ($email, $code, $userName) {
+                Mail::to($email)->send(new TwoFactorCodeMail($code, $userName));
+            }, 1000);
         } catch (\Exception $e) {
             Log::error('Failed to send 2FA email: ' . $e->getMessage());
         }

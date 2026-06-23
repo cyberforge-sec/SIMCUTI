@@ -157,7 +157,9 @@ class TwoFactorController extends Controller
         try {
             $email = Session::get('user_email', '');
             $userName = Session::get('user_name', '');
-            Mail::to($email)->send(new TwoFactorCodeMail($code, $userName));
+            retry(2, function () use ($email, $code, $userName) {
+                Mail::to($email)->send(new TwoFactorCodeMail($code, $userName));
+            }, 1000);
         } catch (\Exception $e) {
             Log::error('Failed to send 2FA resend email: ' . $e->getMessage());
         }
