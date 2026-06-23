@@ -101,10 +101,10 @@ class ReportController extends Controller
             $deptUsers = $this->supabase->selectAdmin('profiles', 'id', ['department_id' => $effectiveDepartmentId]);
             $userIds = array_column($deptUsers, 'id');
             if (!empty($userIds)) {
-                $filters['user_id'] = $userIds;
+                $filters['user_id'] = 'in.(' . implode(',', $userIds) . ')';
             } else {
                 // Department exists but has no members — return empty result set
-                $filters['user_id'] = ['00000000-0000-0000-0000-000000000000'];
+                $filters['user_id'] = 'eq.00000000-0000-0000-0000-000000000000';
             }
         }
         if ($request->filled('leave_type_id')) {
