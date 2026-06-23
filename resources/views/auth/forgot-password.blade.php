@@ -29,7 +29,7 @@
                    id="email"
                    name="email"
                    value="{{ old('email') }}"
-                   placeholder="nama@perusahaan.com"
+                   placeholder="adiva@simcuti.com"
                    type="email"
                    required
                    autofocus>

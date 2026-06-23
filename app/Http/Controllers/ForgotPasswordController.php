@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ActivityLogService;
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -10,10 +11,12 @@ use Illuminate\Support\Facades\Log;
 class ForgotPasswordController extends Controller
 {
     protected SupabaseService $supabase;
+    protected ActivityLogService $activityLog;
 
-    public function __construct(SupabaseService $supabase)
+    public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
+        $this->activityLog = $activityLog;
     }
 
     public function showForgotPassword()
@@ -43,6 +46,7 @@ class ForgotPasswordController extends Controller
         if ($result['success']) {
             Cache::put($rateKey, $attempts + 1, now()->addMinutes(15));
             Log::info('Reset password link sent to: ' . $request->email);
+            $this->activityLog->log('forgot_password', "Permintaan reset password untuk email: {$request->email}");
         } else {
             Log::info('Reset password requested for non-existent email: ' . $request->email);
         }
@@ -96,6 +100,7 @@ class ForgotPasswordController extends Controller
                 ]);
             }
             $userEmail = $user['email'] ?? 'unknown';
+            $userId = $user['id'] ?? null;
         } else {
             // Step 1: Verify the recovery token with Supabase
             // This exchanges the recovery token for a valid access_token
@@ -114,6 +119,7 @@ class ForgotPasswordController extends Controller
                 return back()->withErrors(['password' => 'Gagal memverifikasi token. Silakan coba lagi.']);
             }
             $userEmail = $verifyResult['data']['user']['email'] ?? 'unknown';
+            $userId = $verifyResult['data']['user']['id'] ?? null;
         }
 
         // Step 3: Update the password using the valid access_token
@@ -121,6 +127,7 @@ class ForgotPasswordController extends Controller
 
         if ($updateResult['success']) {
             Log::info('Password reset successful for user: ' . $userEmail);
+            $this->activityLog->log('reset_password', 'Password berhasil direset', null, null, $userId);
             return redirect()->route('login')
                 ->with('success', 'Password berhasil direset! Silakan login dengan password baru.');
         }
