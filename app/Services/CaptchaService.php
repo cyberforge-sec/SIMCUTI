@@ -212,7 +212,7 @@ class CaptchaService
             $url = config('services.supabase.url');
             $serviceKey = config('services.supabase.service_key');
 
-            $client = new \GuzzleHttp\Client();
+            $client = new \GuzzleHttp\Client(['timeout' => 10]);
             $response = $client->get("{$url}/rest/v1/captcha_sessions", [
                 'headers' => [
                     'apikey' => $serviceKey,

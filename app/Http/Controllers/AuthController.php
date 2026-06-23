@@ -250,10 +250,10 @@ class AuthController extends Controller
         $profile = !empty($profiles) ? $profiles[0] : null;
 
         if (!$profile) {
-            $email = $user['email'] ?? '';
+            $email = $user['email'] ?? $user['user_metadata']['email'] ?? '';
             $fullName = $user['user_metadata']['full_name']
                 ?? $user['user_metadata']['name']
-                ?? explode('@', $email)[0];
+                ?? (!empty($email) ? explode('@', $email)[0] : 'User');
 
             $profileData = [
                 'phone' => '',
@@ -295,7 +295,7 @@ class AuthController extends Controller
         Session::regenerate();
         Session::put('user_id', $userId);
         Session::put('user_name', $profile['full_name']);
-        Session::put('user_email', $user['email'] ?? '');
+        Session::put('user_email', $user['email'] ?? $user['user_metadata']['email'] ?? '');
         Session::put('user_role', $profile['role']);
         Session::put('user_department_id', $profile['department_id'] ?? null);
         Session::put('supabase_access_token', $accessToken);
@@ -317,7 +317,11 @@ class AuthController extends Controller
         }
 
         if ($twoFactorEnabled) {
-            $this->generateAndSend2FACode($userId, $user['email'] ?? '', $profile['full_name']);
+            $emailFor2FA = $user['email'] ?? $user['user_metadata']['email'] ?? '';
+            if (empty($emailFor2FA)) {
+                return response()->json(['success' => false, 'error' => 'Akun OAuth ini tidak menyediakan alamat email publik. Verifikasi 2FA tidak dapat dikirim.'], 400);
+            }
+            $this->generateAndSend2FACode($userId, $emailFor2FA, $profile['full_name']);
             $this->activityLog->log('login', 'Login via OAuth (menunggu verifikasi 2FA)', null, null, $userId);
             return response()->json(['success' => true, 'redirect' => route('2fa.show')]);
         }
