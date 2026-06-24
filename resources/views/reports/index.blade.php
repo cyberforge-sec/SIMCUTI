@@ -181,7 +181,7 @@
                     <tr class="hover:bg-primary-container/5 transition-colors group">
                         <td class="px-lg py-md text-body-sm text-secondary">{{ $i + 1 }}</td>
                         <td class="px-lg py-md">
-                            <span class="text-body-sm font-label-md text-on-background">{{ $r['user_name'] ?? '-' }}</span>
+                            <span class="text-body-sm font-label-md text-on-background">{{ e($r['user_name'] ?? '-') }}</span>
                         </td>
                         <td class="px-lg py-md text-body-sm text-on-surface-variant">{{ $r['department_name'] ?? '-' }}</td>
                         <td class="px-lg py-md text-body-sm text-on-surface-variant">{{ $r['leave_type_name'] ?? '-' }}</td>

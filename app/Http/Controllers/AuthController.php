@@ -83,6 +83,7 @@ class AuthController extends Controller
                 ])->withInput();
             }
 
+            // Always return generic message to prevent information disclosure
             return back()->withErrors([
                 'email' => 'Email atau password salah.',
             ])->withInput();
@@ -128,7 +129,7 @@ class AuthController extends Controller
         Cache::forget($rateLimitKey);
         Cache::forget($lockKey);
 
-        // Regenerate session ID to prevent session fixation attacks
+        // Regenerate session ID to prevent session fixation attacks BEFORE storing data
         Session::regenerate();
 
         // Store session data
@@ -292,6 +293,7 @@ class AuthController extends Controller
             'last_login_ip' => $request->ip(),
         ], true);
 
+        // Regenerate session ID to prevent session fixation attacks BEFORE storing data
         Session::regenerate();
         Session::put('user_id', $userId);
         Session::put('user_name', $profile['full_name']);

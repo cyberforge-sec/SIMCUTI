@@ -33,7 +33,7 @@
                     <strong>{{ $notif['title'] ?? 'Notifikasi' }}</strong>
                     <small class="text-muted">{{ isset($notif['created_at']) ? \Carbon\Carbon::parse($notif['created_at'])->diffForHumans() : '' }}</small>
                 </div>
-                <p class="mb-1 text-muted">{{ $notif['message'] ?? '-' }}</p>
+                <p class="mb-1 text-muted">{{ e($notif['message'] ?? '-') }}</p>
                 @if(empty($notif['is_read']))
                 <button class="btn btn-sm btn-outline-primary mt-1" onclick="markRead('{{ $notif['id'] }}')">
                     <span class="material-symbols-outlined2 me-1">check</span>Tandai Dibaca

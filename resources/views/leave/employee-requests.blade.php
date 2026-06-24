@@ -57,7 +57,7 @@
                             <div class="d-flex align-items-center gap-2">
                                 <img src="{{ $leave['user']['profile_photo_url'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($leave['user']['full_name'] ?? 'U') }}"
                                      alt="" class="rounded-circle" width="32" height="32" style="object-fit:cover;">
-                                <strong>{{ $leave['user']['full_name'] ?? '-' }}</strong>
+                                <strong>{{ e($leave['user']['full_name'] ?? '-') }}</strong>
                             </div>
                         </td>
                         <td>

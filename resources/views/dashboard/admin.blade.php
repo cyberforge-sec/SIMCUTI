@@ -105,7 +105,7 @@
                         <div class="flex-1">
                             <div class="flex justify-between items-start">
                                 <p class="text-body-md font-body-md text-on-surface">
-                                    <span class="font-bold">{{ $log['user']['full_name'] ?? 'Sistem' }}:</span> {{ $log['deskripsi'] }}
+                                    <span class="font-bold">{{ e($log['user']['full_name'] ?? 'Sistem') }}:</span> {{ e($log['deskripsi']) }}
                                 </p>
                                 <span class="text-label-sm font-label-sm text-secondary whitespace-nowrap ml-sm">{{ \Carbon\Carbon::parse($log['created_at'])->diffForHumans() }}</span>
                             </div>

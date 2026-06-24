@@ -702,10 +702,19 @@ class SupabaseService
 
         // --- Sanitize: return safe messages for user-facing display ---
 
-        // Auth errors from Supabase are generally safe to show (e.g., "Invalid login credentials")
-        if ($statusCode === 400 || $statusCode === 401 || $statusCode === 422 || $statusCode === 429) {
-            // Supabase auth messages are designed for end-user consumption
-            return $detailedError;
+        // Auth errors from Supabase - sanitize to generic messages
+        if ($statusCode === 400 || $statusCode === 401 || $statusCode === 422) {
+            // Generic auth messages - never expose internal details
+            if (str_contains(strtolower($detailedError), 'email_not_confirmed')) {
+                return 'Email belum diverifikasi. Silakan cek kotak masuk email Anda.';
+            }
+            if (str_contains(strtolower($detailedError), 'invalid') || str_contains(strtolower($detailedError), 'credentials')) {
+                return 'Email atau password salah.';
+            }
+            if (str_contains(strtolower($detailedError), 'user_already_exists') || str_contains(strtolower($detailedError), 'already registered')) {
+                return 'Email sudah terdaftar. Silakan gunakan email lain atau login.';
+            }
+            return 'Data yang dimasukkan tidak valid. Silakan periksa kembali.';
         }
 
         // Rate limiting

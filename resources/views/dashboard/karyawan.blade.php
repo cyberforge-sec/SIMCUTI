@@ -134,7 +134,7 @@
                                 {{ \Carbon\Carbon::parse($leave['tanggal_mulai'])->format('d M Y') }} - {{ \Carbon\Carbon::parse($leave['tanggal_selesai'])->format('d M Y') }}
                             </p>
                             @if(!empty($leave['alasan']))
-                                <p class="text-body-sm font-body-sm text-on-surface-variant mt-xs line-clamp-1">{{ $leave['alasan'] }}</p>
+                                <p class="text-body-sm font-body-sm text-on-surface-variant mt-xs line-clamp-1">{{ e($leave['alasan']) }}</p>
                             @endif
                         </div>
                         <div class="flex flex-col items-end gap-xs">

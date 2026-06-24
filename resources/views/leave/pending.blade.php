@@ -95,7 +95,7 @@
                                 <div class="w-8 h-8 rounded-full {{ $avatarColors[$colorIndex] }} flex items-center justify-center font-bold text-xs">
                                     {{ $initials }}
                                 </div>
-                                <span class="text-body-sm font-label-md text-on-background">{{ $leave['user']['full_name'] ?? '-' }}</span>
+                                <span class="text-body-sm font-label-md text-on-background">{{ e($leave['user']['full_name'] ?? '-') }}</span>
                             </div>
                         </td>
                         <td class="px-lg py-md">

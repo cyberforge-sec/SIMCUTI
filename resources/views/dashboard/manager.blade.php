@@ -61,7 +61,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="font-label-md text-label-md text-on-surface">{{ $approval['user']['full_name'] ?? '-' }}</p>
+                                        <p class="font-label-md text-label-md text-on-surface">{{ e($approval['user']['full_name'] ?? '-') }}</p>
                                         <p class="font-label-sm text-label-sm text-secondary">
                                             {{ $approval['leave_type']['nama'] ?? '-' }} •
                                             {{ \Carbon\Carbon::parse($approval['tanggal_mulai'])->format('d M') }} -

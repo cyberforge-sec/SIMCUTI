@@ -38,6 +38,12 @@ class LeaveRequestController extends Controller
             $filters['status'] = 'eq.' . $request->status;
         }
 
+        // Validate and sanitize search query
+        $searchQuery = $request->input('q', '');
+        if ($searchQuery && !preg_match('/^[\p{L}\p{N}\s\-_\.]{1,100}$/u', $searchQuery)) {
+            $searchQuery = '';
+        }
+
         $leaveRequests = $this->supabase->selectAdvanced('leave_requests', [
             'columns' => '*',
             'filters' => $filters,
@@ -97,25 +103,14 @@ class LeaveRequestController extends Controller
         $endDate = \Carbon\Carbon::parse($request->tanggal_selesai);
         $totalHari = $startDate->diffInDays($endDate) + 1;
 
-        // Check leave balance using the year of the leave request, not current year
-        $leaveYear = date('Y', strtotime($request->tanggal_mulai));
-        $leaveType = $this->supabase->selectSingle('leave_types', 'id', $request->leave_type_id);
-        if ($leaveType && $leaveType['kode'] !== 'CTG') {
-            $balances = $this->supabase->select('leave_balances', '*', [
-                'user_id' => $userId,
-                'tahun' => $leaveYear,
-            ]);
-            if (!empty($balances) && $balances[0]['sisa'] < $totalHari) {
-                return back()->withErrors(['error' => 'Sisa cuti tidak mencukupi.'])->withInput();
-            }
-        }
-
         // Check max days per leave type
+        $leaveType = $this->supabase->selectSingle('leave_types', 'id', $request->leave_type_id);
         if ($leaveType && $totalHari > $leaveType['max_hari_per_pengajuan']) {
             return back()->withErrors(['error' => "Total hari melebihi batas maksimal ({$leaveType['max_hari_per_pengajuan']} hari)."])->withInput();
         }
 
         // Overlap detection: check if user already has leave in this date range
+        // Note: Database trigger also enforces this, but we check early for better UX
         $existingLeaves = $this->supabase->selectAdvanced('leave_requests', [
             'columns' => 'id,tanggal_mulai,tanggal_selesai,status',
             'filters' => [
@@ -196,23 +191,32 @@ class LeaveRequestController extends Controller
         $role = Session::get('user_role');
         $departmentId = Session::get('user_department_id');
 
-        $leave = $this->supabase->selectSingle('leave_requests', 'id', $id);
-        if (!$leave) {
+        // Validate UUID format
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
             return redirect()->route('leave.index')->withErrors(['error' => 'Pengajuan tidak ditemukan.']);
         }
 
-        // Authorization check: user can only view own requests, manager can view team, admin can view all
+        // Fetch with authorization built-in
+        $leave = null;
         if ($role === 'karyawan') {
-            if ($leave['user_id'] !== $userId) {
-                abort(403, 'Anda tidak memiliki akses ke pengajuan ini.');
-            }
+            $leave = $this->supabase->selectSingle('leave_requests', 'id', $id, '*', ['user_id' => $userId]);
         } elseif ($role === 'manager') {
-            if ($leave['user_id'] !== $userId) {
-                $leaveOwner = $this->supabase->selectSingle('profiles', 'id', $leave['user_id'], 'department_id');
-                if (!$leaveOwner || ($leaveOwner['department_id'] ?? '') !== $departmentId) {
-                    abort(403, 'Anda tidak memiliki akses ke pengajuan ini.');
+            // For managers, check if it's their own request or from their department
+            $leave = $this->supabase->selectSingle('leave_requests', 'id', $id);
+            if ($leave) {
+                if ($leave['user_id'] !== $userId) {
+                    $leaveOwner = $this->supabase->selectSingle('profiles', 'id', $leave['user_id'], 'department_id');
+                    if (!$leaveOwner || ($leaveOwner['department_id'] ?? '') !== $departmentId) {
+                        $leave = null;
+                    }
                 }
             }
+        } elseif ($role === 'admin') {
+            $leave = $this->supabase->selectSingle('leave_requests', 'id', $id);
+        }
+
+        if (!$leave) {
+            return redirect()->route('leave.index')->withErrors(['error' => 'Pengajuan tidak ditemukan.']);
         }
 
         // Fix: enrich via reference properly
@@ -357,6 +361,11 @@ class LeaveRequestController extends Controller
     {
         $userId = Session::get('user_id');
 
+        // Validate UUID format for ID
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
+            return response()->json(['success' => false, 'message' => 'ID pengajuan tidak valid.'], 400);
+        }
+
         $result = $this->supabase->update('leave_requests', [
             'id' => $id,
             'user_id' => $userId,
@@ -377,18 +386,37 @@ class LeaveRequestController extends Controller
         $role = Session::get('user_role');
         $departmentId = Session::get('user_department_id');
 
-        // Get pending requests from same department
-        $pendingLeaves = $this->supabase->selectAdvanced('leave_requests', [
-            'columns' => '*',
-            'filters' => ['status' => 'eq.pending'],
-            'order' => 'created_at.asc',
-        ], null, true);
+        // Only managers and admins can access pending approvals
+        if (!in_array($role, ['manager', 'admin'])) {
+            return redirect()->route('leave.index');
+        }
 
-        // Filter by department for manager
-        if ($role === 'manager' && $departmentId) {
-            $teamMembers = $this->supabase->select('profiles', 'id', ['department_id' => $departmentId]);
+        // Get pending requests with authorization built-in
+        $pendingLeaves = [];
+        if ($role === 'admin') {
+            $pendingLeaves = $this->supabase->selectAdvanced('leave_requests', [
+                'columns' => '*',
+                'filters' => ['status' => 'eq.pending'],
+                'order' => 'created_at.asc',
+            ], null, true);
+        } elseif ($role === 'manager' && $departmentId) {
+            // Get team member IDs first
+            $teamMembers = $this->supabase->selectAdmin('profiles', 'id', [
+                'department_id' => $departmentId,
+                'is_active' => 'true',
+            ]);
             $memberIds = array_column($teamMembers, 'id');
-            $pendingLeaves = array_filter($pendingLeaves, fn($l) => in_array($l['user_id'], $memberIds));
+
+            if (!empty($memberIds)) {
+                $pendingLeaves = $this->supabase->selectAdvanced('leave_requests', [
+                    'columns' => '*',
+                    'filters' => [
+                        'status' => 'eq.pending',
+                        'user_id' => 'in.(' . implode(',', $memberIds) . ')',
+                    ],
+                    'order' => 'created_at.asc',
+                ], null, true);
+            }
         }
 
         // Cannot approve own request
@@ -419,6 +447,12 @@ class LeaveRequestController extends Controller
             $filters['status'] = 'eq.' . $request->status;
         }
 
+        // Validate search query
+        $searchQuery = $request->input('q', '');
+        if ($searchQuery && !preg_match('/^[\p{L}\p{N}\s\-_\.]{1,100}$/u', $searchQuery)) {
+            $searchQuery = '';
+        }
+
         $leaveRequests = !empty($memberIds)
             ? $this->supabase->selectAdvanced('leave_requests', [
                 'columns' => '*',
@@ -442,8 +476,37 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses.'], 403);
         }
 
-        $leaves = $this->supabase->selectAdmin('leave_requests', '*', ['id' => $id]);
-        $leave = !empty($leaves) ? $leaves[0] : null;
+        // Validate UUID format for ID
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
+            return response()->json(['success' => false, 'message' => 'ID pengajuan tidak valid.'], 400);
+        }
+
+        // Fetch leave request with authorization check built-in
+        // For managers, only fetch if the request belongs to their department
+        $leave = null;
+        if ($role === 'admin') {
+            $leaves = $this->supabase->selectAdmin('leave_requests', '*', ['id' => $id]);
+            $leave = !empty($leaves) ? $leaves[0] : null;
+        } elseif ($role === 'manager' && $departmentId) {
+            // Get team member IDs first (authorization check)
+            $teamMembers = $this->supabase->selectAdmin('profiles', 'id', [
+                'department_id' => $departmentId,
+                'is_active' => 'true',
+            ]);
+            $memberIds = array_column($teamMembers, 'id');
+
+            if (empty($memberIds) || !in_array($userId, $memberIds)) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
+            }
+
+            // Fetch leave request only if user_id is in memberIds
+            $leaves = $this->supabase->selectAdmin('leave_requests', '*', [
+                'id' => $id,
+                'user_id' => 'in.(' . implode(',', $memberIds) . ')',
+            ]);
+            $leave = !empty($leaves) ? $leaves[0] : null;
+        }
+
         if (!$leave || $leave['status'] !== 'pending') {
             return response()->json(['success' => false, 'message' => 'Pengajuan tidak valid.'], 400);
         }
@@ -452,28 +515,9 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Tidak bisa menyetujui pengajuan sendiri.'], 403);
         }
 
-        // Department scoping: managers can only approve requests from their own department
-        if ($role === 'manager') {
-            $leaveOwnerProfiles = $this->supabase->selectAdmin('profiles', 'department_id', ['id' => $leave['user_id']]);
-            $leaveOwnerDeptId = $leaveOwnerProfiles[0]['department_id'] ?? null;
-            if ($leaveOwnerDeptId !== $departmentId) {
-                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
-            }
-        }
-
         // Check leave balance (skip for unpaid leave / CTG)
         $leaveType = $this->supabase->selectAdmin('leave_types', 'kode', ['id' => $leave['leave_type_id']]);
         $leaveTypeCode = $leaveType[0]['kode'] ?? null;
-
-        if ($leaveTypeCode !== 'CTG') {
-            $balances = $this->supabase->selectAdmin('leave_balances', '*', [
-                'user_id' => $leave['user_id'],
-                'tahun' => date('Y', strtotime($leave['tanggal_mulai'])),
-            ]);
-            if (!empty($balances) && $balances[0]['sisa'] < $leave['total_hari']) {
-                return response()->json(['success' => false, 'message' => 'Saldo cuti tidak mencukupi.'], 400);
-            }
-        }
 
         $result = $this->supabase->update('leave_requests', ['id' => $id], [
             'status' => 'disetujui',
@@ -483,6 +527,12 @@ class LeaveRequestController extends Controller
         if ($result['success']) {
             $this->activityLog->log('approve', 'Menyetujui pengajuan cuti', 'leave_request', $id);
             return response()->json(['success' => true, 'message' => 'Pengajuan berhasil disetujui.']);
+        }
+
+        // Check if error is due to insufficient balance (from database trigger)
+        $errorMsg = $result['error'] ?? '';
+        if (str_contains($errorMsg, 'Saldo cuti tidak mencukupi') || str_contains($errorMsg, 'Saldo cuti tidak ditemukan')) {
+            return response()->json(['success' => false, 'message' => $errorMsg], 400);
         }
 
         return response()->json(['success' => false, 'message' => 'Gagal menyetujui pengajuan.'], 500);
@@ -502,8 +552,37 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses.'], 403);
         }
 
-        $leaves = $this->supabase->selectAdmin('leave_requests', '*', ['id' => $id]);
-        $leave = !empty($leaves) ? $leaves[0] : null;
+        // Validate UUID format for ID
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
+            return response()->json(['success' => false, 'message' => 'ID pengajuan tidak valid.'], 400);
+        }
+
+        // Fetch leave request with authorization check built-in
+        // For managers, only fetch if the request belongs to their department
+        $leave = null;
+        if ($role === 'admin') {
+            $leaves = $this->supabase->selectAdmin('leave_requests', '*', ['id' => $id]);
+            $leave = !empty($leaves) ? $leaves[0] : null;
+        } elseif ($role === 'manager' && $departmentId) {
+            // Get team member IDs first (authorization check)
+            $teamMembers = $this->supabase->selectAdmin('profiles', 'id', [
+                'department_id' => $departmentId,
+                'is_active' => 'true',
+            ]);
+            $memberIds = array_column($teamMembers, 'id');
+
+            if (empty($memberIds) || !in_array($userId, $memberIds)) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
+            }
+
+            // Fetch leave request only if user_id is in memberIds
+            $leaves = $this->supabase->selectAdmin('leave_requests', '*', [
+                'id' => $id,
+                'user_id' => 'in.(' . implode(',', $memberIds) . ')',
+            ]);
+            $leave = !empty($leaves) ? $leaves[0] : null;
+        }
+
         if (!$leave || $leave['status'] !== 'pending') {
             return response()->json(['success' => false, 'message' => 'Pengajuan tidak valid.'], 400);
         }
@@ -512,22 +591,13 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Tidak bisa menolak pengajuan sendiri.'], 403);
         }
 
-        // Department scoping: managers can only reject requests from their own department
-        if ($role === 'manager') {
-            $leaveOwnerProfiles = $this->supabase->selectAdmin('profiles', 'department_id', ['id' => $leave['user_id']]);
-            $leaveOwnerDeptId = $leaveOwnerProfiles[0]['department_id'] ?? null;
-            if ($leaveOwnerDeptId !== $departmentId) {
-                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
-            }
-        }
-
         $result = $this->supabase->update('leave_requests', ['id' => $id], [
             'status' => 'ditolak',
             'disetujui_oleh' => $userId,
         ], true);
 
         if ($result['success']) {
-            $this->activityLog->log('reject', 'Menolak pengajuan cuti: ' . $request->alasan, 'leave_request', $id);
+            $this->activityLog->log('reject', 'Menolak pengajuan cuti: ' . strip_tags($request->alasan), 'leave_request', $id);
             return response()->json(['success' => true, 'message' => 'Pengajuan berhasil ditolak.']);
         }
 

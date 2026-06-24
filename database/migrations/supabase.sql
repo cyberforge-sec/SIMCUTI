@@ -414,26 +414,44 @@ CREATE POLICY "Admins can delete attachments"
 -- FUNCTIONS FOR BUSINESS LOGIC
 -- =============================================
 
--- Function to update leave balance after approval
-CREATE OR REPLACE FUNCTION update_leave_balance_on_approval()
+-- Function to check and update leave balance on approval (atomic, prevents race conditions)
+CREATE OR REPLACE FUNCTION check_and_update_leave_balance_on_approval()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_balance leave_balances%ROWTYPE;
 BEGIN
     IF NEW.status = 'disetujui' AND OLD.status = 'pending' THEN
+        -- Lock the balance row for this user/year to prevent concurrent modifications
+        SELECT * INTO v_balance
+        FROM leave_balances
+        WHERE user_id = NEW.user_id
+        AND tahun = EXTRACT(YEAR FROM NEW.tanggal_mulai)
+        FOR UPDATE;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Saldo cuti tidak ditemukan untuk tahun ini';
+        END IF;
+
+        IF v_balance.sisa < NEW.total_hari THEN
+            RAISE EXCEPTION 'Saldo cuti tidak mencukupi. Sisa: % hari, Dibutuhkan: % hari', v_balance.sisa, NEW.total_hari;
+        END IF;
+
+        -- Update balance atomically
         UPDATE leave_balances
-        SET 
+        SET
             terpakai = terpakai + NEW.total_hari,
             sisa = sisa - NEW.total_hari
-        WHERE user_id = NEW.user_id 
+        WHERE user_id = NEW.user_id
         AND tahun = EXTRACT(YEAR FROM NEW.tanggal_mulai);
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_update_leave_balance
-    AFTER UPDATE ON leave_requests
+CREATE TRIGGER trigger_check_and_update_leave_balance
+    BEFORE UPDATE ON leave_requests
     FOR EACH ROW
-    EXECUTE FUNCTION update_leave_balance_on_approval();
+    EXECUTE FUNCTION check_and_update_leave_balance_on_approval();
 
 -- Function to restore leave balance on rejection/cancellation
 CREATE OR REPLACE FUNCTION restore_leave_balance_on_cancel()
@@ -469,6 +487,14 @@ CREATE OR REPLACE FUNCTION cleanup_expired_2fa_codes()
 RETURNS void AS $$
 BEGIN
     DELETE FROM two_factor_codes WHERE expires_at < NOW();
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to cleanup old activity logs (older than 90 days)
+CREATE OR REPLACE FUNCTION cleanup_old_activity_logs()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM activity_logs WHERE created_at < NOW() - INTERVAL '90 days';
 END;
 $$ LANGUAGE plpgsql;
 

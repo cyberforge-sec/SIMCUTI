@@ -157,6 +157,12 @@ function loadLogs() {
         });
 }
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function renderLogs(logs) {
     const tbody = document.getElementById('logsBody');
     document.getElementById('totalBadge').textContent = `${totalLogs} log`;
@@ -187,17 +193,17 @@ function renderLogs(logs) {
         const style = aksiStyles[log.aksi] || aksiStyles.view;
         return `
             <tr class="hover:bg-primary-container/5 transition-colors">
-                <td class="px-lg py-md text-body-sm text-secondary">${log.created_at ? new Date(log.created_at).toLocaleString('id-ID') : '-'}</td>
-                <td class="px-lg py-md text-body-sm font-label-md text-on-background">${log.user_name || 'Unknown'}</td>
+                <td class="px-lg py-md text-body-sm text-secondary">${log.created_at ? escapeHtml(new Date(log.created_at).toLocaleString('id-ID')) : '-'}</td>
+                <td class="px-lg py-md text-body-sm font-label-md text-on-background">${escapeHtml(log.user_name || 'Unknown')}</td>
                 <td class="px-lg py-md">
                     <span class="inline-flex items-center gap-xs px-3 py-1 ${style.bg} ${style.text} text-label-sm font-label-sm rounded-full">
                         <span class="material-symbols-outlined" style="font-size: 14px;">${style.icon}</span>
-                        ${log.aksi || '-'}
+                        ${escapeHtml(log.aksi || '-')}
                     </span>
                 </td>
-                <td class="px-lg py-md text-body-sm text-on-surface-variant">${log.deskripsi || '-'}</td>
-                <td class="px-lg py-md text-body-sm text-secondary">${log.model_type ? log.model_type + (log.model_id ? ' #' + log.model_id.substring(0,8) : '') : '-'}</td>
-                <td class="px-lg py-md text-body-sm text-secondary">${log.ip_address || '-'}</td>
+                <td class="px-lg py-md text-body-sm text-on-surface-variant">${escapeHtml(log.deskripsi || '-')}</td>
+                <td class="px-lg py-md text-body-sm text-secondary">${escapeHtml(log.model_type ? log.model_type + (log.model_id ? ' #' + log.model_id.substring(0,8) : '') : '-')}</td>
+                <td class="px-lg py-md text-body-sm text-secondary">${escapeHtml(log.ip_address || '-')}</td>
             </tr>`;
     }).join('');
 }

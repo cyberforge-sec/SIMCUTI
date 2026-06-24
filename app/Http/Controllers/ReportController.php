@@ -90,15 +90,20 @@ class ReportController extends Controller
             // Managers can ONLY see their own department — ignore query string parameter
             $effectiveDepartmentId = $userDepartmentId;
         } elseif ($role === 'admin' && $request->filled('department_id')) {
-            // Admins can filter by any department, but validate UUID format
-            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $request->department_id)) {
-                $effectiveDepartmentId = $request->department_id;
+            // Admins can filter by any department, but validate UUID format strictly
+            $deptId = $request->department_id;
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $deptId)) {
+                // Verify department exists and is active
+                $dept = $this->supabase->selectSingle('departments', 'id', $deptId, 'id,is_active');
+                if ($dept && ($dept['is_active'] ?? false)) {
+                    $effectiveDepartmentId = $deptId;
+                }
             }
         }
 
         if ($effectiveDepartmentId) {
             // Use admin key to look up department members (profiles RLS may block anon key)
-            $deptUsers = $this->supabase->selectAdmin('profiles', 'id', ['department_id' => $effectiveDepartmentId]);
+            $deptUsers = $this->supabase->selectAdmin('profiles', 'id', ['department_id' => $effectiveDepartmentId, 'is_active' => 'true']);
             $userIds = array_column($deptUsers, 'id');
             if (!empty($userIds)) {
                 $filters['user_id'] = 'in.(' . implode(',', $userIds) . ')';
@@ -108,25 +113,41 @@ class ReportController extends Controller
             }
         }
         if ($request->filled('leave_type_id')) {
-            // Validate UUID format to prevent injection
-            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $request->leave_type_id)) {
-                $filters['leave_type_id'] = 'eq.' . $request->leave_type_id;
+            // Validate UUID format strictly
+            $ltId = $request->leave_type_id;
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $ltId)) {
+                // Verify leave type exists and is active
+                $lt = $this->supabase->selectSingle('leave_types', 'id', $ltId, 'id,is_active');
+                if ($lt && ($lt['is_active'] ?? false)) {
+                    $filters['leave_type_id'] = 'eq.' . $ltId;
+                }
             }
         }
         if ($request->filled('date_from')) {
-            // Validate date format YYYY-MM-DD to prevent injection
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->date_from)) {
-                $filters['tanggal_mulai'] = 'gte.' . $request->date_from;
+            // Validate date format YYYY-MM-DD strictly and ensure it's a valid date
+            $dateFrom = $request->date_from;
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) && $this->isValidDate($dateFrom)) {
+                $filters['tanggal_mulai'] = 'gte.' . $dateFrom;
             }
         }
         if ($request->filled('date_to')) {
-            // Validate date format YYYY-MM-DD to prevent injection
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->date_to)) {
-                $filters['tanggal_selesai'] = 'lte.' . $request->date_to;
+            // Validate date format YYYY-MM-DD strictly and ensure it's a valid date
+            $dateTo = $request->date_to;
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo) && $this->isValidDate($dateTo)) {
+                $filters['tanggal_selesai'] = 'lte.' . $dateTo;
             }
         }
 
         return $filters;
+    }
+
+    /**
+     * Validate date string is a real calendar date
+     */
+    protected function isValidDate(string $date): bool
+    {
+        $d = \DateTime::createFromFormat('Y-m-d', $date);
+        return $d && $d->format('Y-m-d') === $date;
     }
 
     protected function fetchFilteredReports(Request $request, int $limit = 200): array

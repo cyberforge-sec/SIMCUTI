@@ -55,7 +55,7 @@
                 <hr>
                 <div class="row mb-3">
                     <div class="col-sm-4 text-muted">Alasan</div>
-                    <div class="col-sm-8">{{ $leave->alasan ?? '-' }}</div>
+                    <div class="col-sm-8">{{ e($leave->alasan ?? '-') }}</div>
                 </div>
                 @if(!empty($leave->lampiran_url))
                 <div class="row mb-3">
