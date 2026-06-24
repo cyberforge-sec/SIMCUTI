@@ -60,7 +60,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && php artisan view:cache
 
 # Set permissions
-RUN mkdir -p /app/storage /app/bootstrap/cache \
+RUN mkdir -p /app/storage /app/bootstrap/cache /var/log/supervisor \
     && chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
 
