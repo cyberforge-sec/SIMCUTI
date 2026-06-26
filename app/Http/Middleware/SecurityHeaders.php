@@ -40,6 +40,23 @@ class SecurityHeaders
             . "form-action 'self'"
         );
 
+        // Report-only strict CSP for gradual migration away from unsafe-inline/unsafe-eval.
+        // It lets us see what would break before refactoring inline Blade scripts/styles.
+        if (app()->environment('production')) {
+            $response->headers->set(
+                'Content-Security-Policy-Report-Only',
+                "default-src 'self'; "
+                . "script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://static.cloudflareinsights.com; "
+                . "style-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://fonts.googleapis.com; "
+                . "img-src 'self' data: https: blob: https://github.githubassets.com https://www.gstatic.com; "
+                . "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
+                . "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://static.cloudflareinsights.com; "
+                . "frame-ancestors 'none'; "
+                . "base-uri 'self'; "
+                . "form-action 'self'"
+            );
+        }
+
         // XSS Protection (legacy, useful for older browsers)
         $response->headers->set('X-XSS-Protection', '1; mode=block');
 

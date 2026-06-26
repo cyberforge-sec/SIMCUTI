@@ -131,13 +131,14 @@ Route::middleware(['supabase.auth', '2fa'])->group(function () {
         // Activity Logs
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         Route::get('/activity-logs/data', [ActivityLogController::class, 'data'])->name('activity-logs.data');
-    });
-});
 
-Route::get('/clear-cache', function() {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    if (function_exists('opcache_reset')) {
-        opcache_reset();
-    }
-    return 'All caches and OPCache have been cleared!';
+        // Maintenance: admin-only cache clear endpoint. Keep protected in production.
+        Route::post('/clear-cache', function() {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            if (function_exists('opcache_reset')) {
+                opcache_reset();
+            }
+            return response()->json(['message' => 'All caches and OPCache have been cleared.']);
+        })->name('maintenance.clear-cache');
+    });
 });

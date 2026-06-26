@@ -3,7 +3,12 @@
     "name": "simcuti/simcuti",
     "type": "project",
     "description": "Sistem Informasi Manajemen Cuti - Leave Management System",
-    "keywords": ["laravel", "simcuti", "cuti", "leave-management"],
+    "keywords": [
+        "laravel",
+        "simcuti",
+        "cuti",
+        "leave-management"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -39,6 +44,9 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "audit:security": [
+            "composer audit"
         ]
     },
     "extra": {
