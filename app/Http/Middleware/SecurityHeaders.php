@@ -24,14 +24,13 @@ class SecurityHeaders
         // Restrict browser features/APIs not used by the application
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-        // Content Security Policy
-        // Stricter CSP - removing unsafe-inline and unsafe-eval where possible
-        $supabaseUrl = config('services.supabase.url', '');
+        // Enforced CSP stays compatible with existing Blade inline scripts/styles and Tailwind CDN.
+        // A stricter policy is sent as Report-Only below for a safe migration path.
         $response->headers->set(
             'Content-Security-Policy',
             "default-src 'self'; "
-            . "script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://static.cloudflareinsights.com; "
-            . "style-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://fonts.googleapis.com; "
+            . "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://static.cloudflareinsights.com; "
+            . "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://fonts.googleapis.com; "
             . "img-src 'self' data: https: blob: https://github.githubassets.com https://www.gstatic.com; "
             . "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
             . "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://static.cloudflareinsights.com; "
