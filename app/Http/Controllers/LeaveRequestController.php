@@ -171,8 +171,13 @@ class LeaveRequestController extends Controller
             'total_hari' => $totalHari,
             'alasan' => strip_tags($request->alasan),
             'status' => 'pending',
-            'lampiran_url' => $lampiranUrl,
         ];
+
+        // Only send attachment column when a file exists. Some deployed Supabase
+        // schemas may not have lampiran_url yet, and sending null breaks inserts.
+        if ($lampiranUrl) {
+            $data['lampiran_url'] = $lampiranUrl;
+        }
 
         $result = $this->supabase->insert('leave_requests', $data);
 
@@ -196,10 +201,13 @@ class LeaveRequestController extends Controller
             return redirect()->route('leave.index')->withErrors(['error' => 'Pengajuan tidak ditemukan.']);
         }
 
-        // Fetch with authorization built-in
+        // Fetch then authorize explicitly. selectSingle() does not accept filter arrays.
         $leave = null;
         if ($role === 'karyawan') {
-            $leave = $this->supabase->selectSingle('leave_requests', 'id', $id, '*', ['user_id' => $userId]);
+            $leave = $this->supabase->selectSingle('leave_requests', 'id', $id);
+            if (!$leave || $leave['user_id'] !== $userId) {
+                $leave = null;
+            }
         } elseif ($role === 'manager') {
             // For managers, check if it's their own request or from their department
             $leave = $this->supabase->selectSingle('leave_requests', 'id', $id);
@@ -436,7 +444,10 @@ class LeaveRequestController extends Controller
 
         $departmentId = Session::get('user_department_id');
         $teamMembers = $departmentId
-            ? $this->supabase->select('profiles', 'id', ['department_id' => $departmentId])
+            ? $this->supabase->selectAdmin('profiles', 'id', [
+                'department_id' => $departmentId,
+                'is_active' => 'true',
+            ])
             : [];
         $memberIds = array_column($teamMembers, 'id');
 
