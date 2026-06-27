@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman create. --}
 @extends('layouts.app')
 
 @section('title', 'Ajukan Cuti Baru')
@@ -406,4 +407,4 @@
 </script>
 @endpush
 @endsection
-  
+   
