@@ -35,4 +35,4 @@ class TwoFactorCodeMail extends Mailable
         );
     }
 }
- 
+  
