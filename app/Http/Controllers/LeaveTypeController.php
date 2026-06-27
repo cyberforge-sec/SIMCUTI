@@ -127,3 +127,4 @@ class LeaveTypeController extends Controller
         return back()->withErrors(['error' => 'Gagal menghapus jenis cuti.']);
     }
 }
+ 
