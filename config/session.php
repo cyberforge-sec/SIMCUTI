@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi pengelolaan data sesi login pengguna.
+
 use Illuminate\Support\Str;
 
 return [
@@ -74,4 +76,4 @@ return [
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
 ];
- 
+  
