@@ -84,4 +84,4 @@ SELECT schemaname, tablename, policyname, qual
 FROM pg_policies
 WHERE tablename = 'profiles'
   AND qual LIKE '%FROM%profiles%';
-  
+   
