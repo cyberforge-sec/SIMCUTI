@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman index. --}
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
@@ -12,4 +13,4 @@
         @include('dashboard.karyawan')
     @endif
 @endsection
-  
+   
