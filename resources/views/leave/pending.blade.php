@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman pending. --}
 @extends('layouts.app')
 
 @section('title', 'Perlu Persetujuan')
@@ -235,4 +236,4 @@ function showRejectModal(id) {
 </script>
 @endpush
 @endsection
-  
+   
