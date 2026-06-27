@@ -117,3 +117,4 @@ class ActivityLogService
         return $this->supabase->count('activity_logs', $filters, true);
     }
 }
+ 
