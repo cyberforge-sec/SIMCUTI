@@ -1,3 +1,3 @@
 # storage
 
-Folder ini untuk menyimpan file hasil upload user, log error, dan file cache internal.
+Menyimpan file hasil unggahan user dan log error internal
