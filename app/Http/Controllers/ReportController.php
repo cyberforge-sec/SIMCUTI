@@ -145,7 +145,7 @@ class ReportController extends Controller
         
         // Filter buat tipe cuti, divalidasi juga (harus UUID yang bener dan aktif)
         if ($request->filled('leave_type_id')) {
-            // Validate UUID format strictly
+            // Validasi format ID
             $ltId = $request->leave_type_id;
             if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $ltId)) {
                 // Verify leave type exists and is active
@@ -158,7 +158,7 @@ class ReportController extends Controller
         
         // Filter rentang tanggal dari (mulai cuti)
         if ($request->filled('date_from')) {
-            // Validate date format YYYY-MM-DD strictly and ensure it's a valid date
+            // Validasi format tanggal
             $dateFrom = $request->date_from;
             // Pastikan format dan tanggalnya valid sebelum pasang filter gte (lebih besar sama dengan)
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) && $this->isValidDate($dateFrom)) {
@@ -168,7 +168,7 @@ class ReportController extends Controller
         
         // Filter rentang tanggal sampai (akhir cuti)
         if ($request->filled('date_to')) {
-            // Validate date format YYYY-MM-DD strictly and ensure it's a valid date
+            // Validasi format tanggal
             $dateTo = $request->date_to;
             // Pastikan format dan tanggalnya valid sebelum pasang filter lte (lebih kecil sama dengan)
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo) && $this->isValidDate($dateTo)) {
@@ -391,7 +391,7 @@ class ReportController extends Controller
         $html .= '<div class="footer">Total data: ' . count($reports) . ' pengajuan</div>';
         $html .= '</body></html>';
 
-        // Check if dompdf is available
+        // Mengecek modul PDF
         // Kalau kebetulan plugin dompdf dipasang, jadikan file PDF betulan
         if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);

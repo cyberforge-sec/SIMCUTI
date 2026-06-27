@@ -27,7 +27,7 @@ class DepartmentController extends Controller
             'filters' => ['is_active' => 'eq.true'],
         ]);
 
-        // Get managers for each department
+        // Mengambil data manajer departemen
         foreach ($departments as &$dept) {
             if (!empty($dept['manager_id'])) {
                 $managers = $this->supabase->select('profiles', 'full_name', ['id' => $dept['manager_id']]);
@@ -43,7 +43,7 @@ class DepartmentController extends Controller
     // Menampilkan form untuk membuat data baru
     public function create()
     {
-        // Get available managers (role = manager, not already assigned)
+        // Mengambil manajer yang tersedia
         $managers = $this->supabase->select('profiles', 'id,full_name', [
             'role' => 'manager',
             'is_active' => 'true',
@@ -71,7 +71,7 @@ class DepartmentController extends Controller
             return back()->withErrors(['kode' => 'Kode departemen sudah digunakan.'])->withInput();
         }
 
-        // Validate that manager_id belongs to a user with role='manager'
+        // Validasi manajer
         if ($request->manager_id) {
             $managerProfile = $this->supabase->selectAdmin('profiles', 'role', ['id' => $request->manager_id]);
             if (empty($managerProfile) || $managerProfile[0]['role'] !== 'manager') {
@@ -126,7 +126,7 @@ class DepartmentController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
-        // Validate that manager_id belongs to a user with role='manager'
+        // Validasi manajer
         if ($request->manager_id) {
             $managerProfile = $this->supabase->selectAdmin('profiles', 'role', ['id' => $request->manager_id]);
             if (empty($managerProfile) || $managerProfile[0]['role'] !== 'manager') {

@@ -109,7 +109,7 @@ class LeaveTypeController extends Controller
     // Menghapus data dari database
     public function destroy(string $id)
     {
-        // Check if leave type is used
+        // Mengecek apakah tipe cuti sedang digunakan
         $usedCount = $this->supabase->count('leave_requests', ['leave_type_id' => $id], true);
         if ($usedCount > 0) {
             return back()->withErrors(['error' => 'Tidak bisa menghapus jenis cuti yang sudah digunakan.']);

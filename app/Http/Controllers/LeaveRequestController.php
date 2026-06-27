@@ -42,7 +42,7 @@ class LeaveRequestController extends Controller
             $filters['status'] = 'eq.' . $request->status;
         }
 
-        // Validate and sanitize search query
+        // Validasi teks pencarian
         // Validasi dan bersihkan input pencarian
         $searchQuery = $request->input('q', '');
         if ($searchQuery && !preg_match('/^[\p{L}\p{N}\s\-_\.]{1,100}$/u', $searchQuery)) {
@@ -114,13 +114,13 @@ class LeaveRequestController extends Controller
         // Ambil ID user yang login
         $userId = Session::get('user_id');
 
-        // Calculate total days
+        // Menghitung total hari
         // Hitung total hari cuti yang diajukan
         $startDate = \Carbon\Carbon::parse($request->tanggal_mulai);
         $endDate = \Carbon\Carbon::parse($request->tanggal_selesai);
         $totalHari = $startDate->diffInDays($endDate) + 1;
 
-        // Check max days per leave type
+        // Cek batas maksimal hari cuti
         // Pastikan tidak melebihi batas maksimal hari untuk tipe cuti yang dipilih
         $leaveType = $this->supabase->selectSingle('leave_types', 'id', $request->leave_type_id);
         if ($leaveType && $totalHari > $leaveType['max_hari_per_pengajuan']) {
@@ -187,7 +187,7 @@ class LeaveRequestController extends Controller
             }
         }
 
-        // Create leave request
+        // Menyimpan pengajuan cuti
         // Susun data cuti untuk disimpan
         $data = [
             'user_id' => $userId,
@@ -199,7 +199,7 @@ class LeaveRequestController extends Controller
             'status' => 'pending',
         ];
 
-        // Only send attachment column when a file exists. Some deployed Supabase
+        // Mengirim lampiran
         // schemas may not have lampiran_url yet, and sending null breaks inserts.
         // Simpan URL lampiran jika file berhasil diupload
         if ($lampiranUrl) {
@@ -226,13 +226,13 @@ class LeaveRequestController extends Controller
         $role = Session::get('user_role');
         $departmentId = Session::get('user_department_id');
 
-        // Validate UUID format
+        // Validasi format ID
         // Validasi format ID pengajuan
         if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
             return redirect()->route('leave.index')->withErrors(['error' => 'Pengajuan tidak ditemukan.']);
         }
 
-        // Fetch then authorize explicitly. selectSingle() does not accept filter arrays.
+        // Mengambil data dan verifikasi akses
         // Cari pengajuan dan periksa hak aksesnya sesuai role user
         $leave = null;
         if ($role === 'karyawan') {
@@ -242,7 +242,7 @@ class LeaveRequestController extends Controller
                 $leave = null;
             }
         } elseif ($role === 'manager') {
-            // For managers, check if it's their own request or from their department
+            // Verifikasi manajer
             // Manager bisa melihat pengajuannya sendiri atau dari karyawan di departemennya
             $leave = $this->supabase->selectSingle('leave_requests', 'id', $id);
             if ($leave) {
@@ -262,13 +262,13 @@ class LeaveRequestController extends Controller
             return redirect()->route('leave.index')->withErrors(['error' => 'Pengajuan tidak ditemukan.']);
         }
 
-        // Fix: enrich via reference properly
+        // Melengkapi data
         // Tambahkan informasi user dan tipe cuti ke dalam data pengajuan
         $leaves = [$leave];
         $this->enrichLeaveRequests($leaves);
         $leave = (object) $leaves[0];
 
-        // Get signed URL for attachment if exists
+        // Mengambil URL lampiran
         // Buat URL sementara untuk mengakses lampiran jika ada
         $signedUrl = null;
         if (!empty($leave->lampiran_url ?? null)) {
@@ -276,7 +276,7 @@ class LeaveRequestController extends Controller
             $signedUrl = $this->supabase->getSignedUrl($bucket, $leave->lampiran_url);
         }
 
-        // Get approver name
+        // Mengambil nama penyetuju
         // Dapatkan nama penyetuju jika pengajuan sudah disetujui
         $approverName = null;
         if (!empty($leave->disetujui_oleh ?? null)) {
@@ -325,7 +325,7 @@ class LeaveRequestController extends Controller
         // Hitung ulang total hari yang diajukan
         $totalHari = \Carbon\Carbon::parse($request->tanggal_mulai)->diffInDays(\Carbon\Carbon::parse($request->tanggal_selesai)) + 1;
 
-        // Check leave balance using the year of the leave request, not current year
+        // Mengecek sisa cuti
         // Cek saldo cuti dengan mencocokkannya dengan tahun dari tanggal mulai cuti
         $leaveYear = date('Y', strtotime($request->tanggal_mulai));
         $leaveType = $this->supabase->selectSingle('leave_types', 'id', $request->leave_type_id);
@@ -339,7 +339,7 @@ class LeaveRequestController extends Controller
             }
         }
 
-        // Check max days per leave type
+        // Cek batas maksimal hari cuti
         // Cek apakah total hari melebihi batas aturan jenis cuti
         if ($leaveType && $totalHari > $leaveType['max_hari_per_pengajuan']) {
             return back()->withErrors(['error' => "Total hari melebihi batas maksimal ({$leaveType['max_hari_per_pengajuan']} hari)."])->withInput();
@@ -354,7 +354,7 @@ class LeaveRequestController extends Controller
             'alasan' => strip_tags($request->alasan),
         ];
 
-        // Fetch old leave request to get existing lampiran_url
+        // Mengambil data cuti lama
         // Dapatkan URL lampiran lama jika ada
         $oldLeave = $this->supabase->selectSingle('leave_requests', 'id', $id, 'lampiran_url');
         $oldLampiranUrl = $oldLeave['lampiran_url'] ?? null;
@@ -396,7 +396,7 @@ class LeaveRequestController extends Controller
 
             if ($uploadResult['success']) {
                 $lampiranUrl = $fileName;
-                // Delete old file from storage if exists
+                // Menghapus file lama
                 // Jika file lama ada, hapus file tersebut dari storage
                 if ($oldLampiranUrl) {
                     $this->supabase->deleteFile($bucket, [$oldLampiranUrl]);
@@ -428,7 +428,7 @@ class LeaveRequestController extends Controller
     {
         $userId = Session::get('user_id');
 
-        // Validate UUID format for ID
+        // Validasi format ID
         // Validasi keabsahan format ID
         if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
             return response()->json(['success' => false, 'message' => 'ID pengajuan tidak valid.'], 400);
@@ -456,13 +456,13 @@ class LeaveRequestController extends Controller
         $role = Session::get('user_role');
         $departmentId = Session::get('user_department_id');
 
-        // Only managers and admins can access pending approvals
+        // Hanya manajer dan admin
         // Pastikan halaman ini hanya bisa diakses admin dan manager
         if (!in_array($role, ['manager', 'admin'])) {
             return redirect()->route('leave.index');
         }
 
-        // Get pending requests with authorization built-in
+        // Mengambil data pengajuan
         // Ambil data pengajuan pending dengan proteksi sesuai role
         $pendingLeaves = [];
         if ($role === 'admin') {
@@ -473,7 +473,7 @@ class LeaveRequestController extends Controller
                 'order' => 'created_at.asc',
             ], null, true);
         } elseif ($role === 'manager' && $departmentId) {
-            // Get team member IDs first
+            // Mengambil ID tim
             // Manager harus mengambil ID anggota departemennya terlebih dahulu
             $teamMembers = $this->supabase->selectAdmin('profiles', 'id', [
                 'department_id' => $departmentId,
@@ -534,7 +534,7 @@ class LeaveRequestController extends Controller
             $filters['status'] = 'eq.' . $request->status;
         }
 
-        // Validate search query
+        // Validasi pencarian
         // Lakukan validasi terhadap query pencarian
         $searchQuery = $request->input('q', '');
         if ($searchQuery && !preg_match('/^[\p{L}\p{N}\s\-_\.]{1,100}$/u', $searchQuery)) {
@@ -568,21 +568,21 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses.'], 403);
         }
 
-        // Validate UUID format for ID
+        // Validasi format ID
         // Cek apakah format ID benar
         if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
             return response()->json(['success' => false, 'message' => 'ID pengajuan tidak valid.'], 400);
         }
 
-        // Fetch leave request with authorization check built-in
-        // For managers, only fetch if the request belongs to their department
+        // Mengambil data cuti
+        // Verifikasi akses manajer
         // Ambil data pengajuan dan pastikan yang bersangkutan berhak menyetujui
         $leave = null;
         if ($role === 'admin') {
             $leaves = $this->supabase->selectAdmin('leave_requests', '*', ['id' => $id]);
             $leave = !empty($leaves) ? $leaves[0] : null;
         } elseif ($role === 'manager' && $departmentId) {
-            // Get team member IDs first (authorization check)
+            // Mengambil ID tim
             // Manager hanya dapat menyetujui timnya
             $teamMembers = $this->supabase->selectAdmin('profiles', 'id', [
                 'department_id' => $departmentId,
@@ -594,7 +594,7 @@ class LeaveRequestController extends Controller
                 return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
             }
 
-            // Fetch leave request only if user_id is in memberIds
+            // Mengambil data cuti
             $leaves = $this->supabase->selectAdmin('leave_requests', '*', [
                 'id' => $id,
                 'user_id' => 'in.(' . implode(',', $memberIds) . ')',
@@ -612,7 +612,7 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Tidak bisa menyetujui pengajuan sendiri.'], 403);
         }
 
-        // Check leave balance (skip for unpaid leave / CTG)
+        // Mengecek sisa cuti
         // Ambil informasi jenis cuti untuk keperluan pengecekan
         $leaveType = $this->supabase->selectAdmin('leave_types', 'kode', ['id' => $leave['leave_type_id']]);
         $leaveTypeCode = $leaveType[0]['kode'] ?? null;
@@ -629,7 +629,7 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => true, 'message' => 'Pengajuan berhasil disetujui.']);
         }
 
-        // Check if error is due to insufficient balance (from database trigger)
+        // Cek sisa cuti
         // Jika saldo habis, tampilkan error yang relevan dari trigger database
         $errorMsg = $result['error'] ?? '';
         if (str_contains($errorMsg, 'Saldo cuti tidak mencukupi') || str_contains($errorMsg, 'Saldo cuti tidak ditemukan')) {
@@ -655,21 +655,21 @@ class LeaveRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses.'], 403);
         }
 
-        // Validate UUID format for ID
+        // Validasi format ID
         // Pastikan format ID pengajuan benar
         if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
             return response()->json(['success' => false, 'message' => 'ID pengajuan tidak valid.'], 400);
         }
 
-        // Fetch leave request with authorization check built-in
-        // For managers, only fetch if the request belongs to their department
+        // Mengambil data cuti
+        // Verifikasi akses manajer
         // Ambil data pengajuan dengan mempertimbangkan wilayah wewenang
         $leave = null;
         if ($role === 'admin') {
             $leaves = $this->supabase->selectAdmin('leave_requests', '*', ['id' => $id]);
             $leave = !empty($leaves) ? $leaves[0] : null;
         } elseif ($role === 'manager' && $departmentId) {
-            // Get team member IDs first (authorization check)
+            // Mengambil ID tim
             $teamMembers = $this->supabase->selectAdmin('profiles', 'id', [
                 'department_id' => $departmentId,
                 'is_active' => 'true',
@@ -680,7 +680,7 @@ class LeaveRequestController extends Controller
                 return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke pengajuan ini.'], 403);
             }
 
-            // Fetch leave request only if user_id is in memberIds
+            // Mengambil data cuti
             $leaves = $this->supabase->selectAdmin('leave_requests', '*', [
                 'id' => $id,
                 'user_id' => 'in.(' . implode(',', $memberIds) . ')',
@@ -775,7 +775,7 @@ class LeaveRequestController extends Controller
     protected function stripExifData(string $filePath, string $mimeType): void
     {
         try {
-            // Validate image dimensions BEFORE loading into memory
+            // Validasi dimensi gambar
             // to prevent image bomb attacks (small file, massive pixel count)
             // Validasi dulu resolusi gambarnya agar tidak menguras memori server
             $imageInfo = @getimagesize($filePath);

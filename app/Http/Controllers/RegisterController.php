@@ -81,7 +81,7 @@ class RegisterController extends Controller
             return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan cek email untuk verifikasi.');
         }
 
-        // Update profile record (handle_new_user trigger already created it with basic data)
+        // Memperbarui profil pengguna
         // New self-registered accounts are active so they can login immediately
         $profileData = [
             'phone' => $request->phone,
@@ -105,7 +105,7 @@ class RegisterController extends Controller
             }
         }
 
-        // Update leave balance (trigger already created it, just ensure correct values)
+        // Memperbarui sisa cuti
         $this->supabase->update('leave_balances', ['user_id' => $userId, 'tahun' => date('Y')], [
             'total_jatah' => 12,
             'terpakai' => 0,

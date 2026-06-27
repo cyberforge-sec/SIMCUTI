@@ -56,7 +56,7 @@ class TwoFactorController extends Controller
 
         $attempts = (int) Cache::get($rateKey, 0);
 
-        // Check code from database (use admin to bypass RLS)
+        // Mengecek kode
         $codes = $this->supabase->selectAdmin('two_factor_codes', '*', [
             'user_id' => $userId,
             'used' => 'false',
@@ -123,7 +123,7 @@ class TwoFactorController extends Controller
             'used' => true,
         ], true);
 
-        // Set session as 2FA verified with timestamp for server-side validation
+        // Menyimpan sesi 2FA
         Session::put('2fa_verified', true);
         Session::put('2fa_verified_at', now()->toIso8601String());
 

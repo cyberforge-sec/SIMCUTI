@@ -20,9 +20,7 @@ use Illuminate\Support\Facades\Route;
 // Nampilin halaman login di root (biar nggak kena redirect 302 yang bisa ngilangin URL fragment kayak access_token dari Supabase)
 Route::get('/', [AuthController::class, 'showLogin']);
 
-// ============================================
 // GUEST ROUTES (Rute buat yang belum login)
-// ============================================
 Route::middleware('guest')->group(function () {
     // Autentikasi / Login
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -48,9 +46,7 @@ Route::get('/oauth-callback', [AuthController::class, 'oauthCallback'])->name('o
 Route::post('/oauth-handle', [AuthController::class, 'oauthHandle'])->name('oauth.handle');
 Route::get('/oauth/{provider}', [AuthController::class, 'oauthRedirect'])->name('oauth.redirect')->where('provider', 'github|google');
 
-// ============================================
 // 2FA ROUTES (Udah login tapi belum verifikasi 2 Langkah)
-// ============================================
 Route::middleware('supabase.auth')->group(function () {
     // Proses dan halaman 2FA
     Route::get('/2fa', [TwoFactorController::class, 'show'])->name('2fa.show');
@@ -61,17 +57,13 @@ Route::middleware('supabase.auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-// ============================================
 // AUTHENTICATED ROUTES (Udah login dan beres verifikasi 2FA)
-// ============================================
 Route::middleware(['supabase.auth', '2fa'])->group(function () {
 
     // Halaman Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // ------------------------------------------
     // SEMUA ROLE: Pengelolaan Cuti (Leave Management)
-    // ------------------------------------------
     Route::prefix('leave')->name('leave.')->group(function () {
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
         Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
@@ -117,9 +109,7 @@ Route::middleware(['supabase.auth', '2fa'])->group(function () {
         Route::get('/export/{format}', [ReportController::class, 'export'])->name('export');
     });
 
-    // ------------------------------------------
     // KHUSUS ADMIN: Data Master & Catatan Aktivitas
-    // ------------------------------------------
     Route::middleware('role:admin')->group(function () {
         // Kelola daftar pengguna (Users CRUD)
         Route::resource('users', UserController::class)->where(['user' => '[0-9a-f\-]{36}']);

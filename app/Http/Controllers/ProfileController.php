@@ -85,7 +85,7 @@ class ProfileController extends Controller
 
         $file = $request->file('photo');
 
-        // Validate image dimensions BEFORE loading into memory
+        // Validasi dimensi gambar
         // to prevent image bomb attacks (small file, massive pixel count)
         $imageInfo = @getimagesize($file->getRealPath());
         if ($imageInfo) {
@@ -187,17 +187,17 @@ class ProfileController extends Controller
             $this->supabase->signOut($result['data']['access_token']);
         }
 
-        // Delete related records (cascade doesn't work via PostgREST, must delete manually)
+        // Menghapus data terkait
         $this->supabase->delete('notifications', ['user_id' => $userId], true);
         $this->supabase->delete('activity_logs', ['user_id' => $userId], true);
         $this->supabase->delete('leave_balances', ['user_id' => $userId], true);
         $this->supabase->delete('leave_requests', ['user_id' => $userId], true);
         $this->supabase->delete('two_factor_codes', ['user_id' => $userId], true);
 
-        // Delete profile record
+        // Menghapus profil pengguna
         $this->supabase->delete('profiles', ['id' => $userId], true);
 
-        // Delete auth user via Supabase admin API
+        // Menghapus akun pengguna
         $this->supabase->adminDeleteUser($userId);
 
         // Clear session

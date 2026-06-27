@@ -59,9 +59,7 @@ class SupabaseService
         ];
     }
 
-    // ============================================================
     // AUTH METHODS
-    // ============================================================
 
     /**
      * Sign in with email and password
@@ -178,7 +176,7 @@ class SupabaseService
         try {
             $json = ['email' => $email];
 
-            // Set redirect URL so Supabase sends a link back to our app
+            // Mengatur URL redirect
             // Tambahin URL redirect kalau emang disediain
             if ($redirectTo) {
                 $json['redirectTo'] = $redirectTo;
@@ -322,9 +320,7 @@ class SupabaseService
         }
     }
 
-    // ============================================================
     // DATABASE (PostgREST) METHODS
-    // ============================================================
 
     /**
      * Select records from a table
@@ -586,9 +582,7 @@ class SupabaseService
         }
     }
 
-    // ============================================================
     // STORAGE METHODS
-    // ============================================================
 
     /**
      * Upload file to storage
@@ -667,9 +661,7 @@ class SupabaseService
         }
     }
 
-    // ============================================================
     // OAUTH METHODS
-    // ============================================================
 
     /**
      * Get OAuth login URL for a provider (github, google, etc.)
@@ -694,9 +686,7 @@ class SupabaseService
         return $this->getUser($accessToken);
     }
 
-    // ============================================================
     // HELPER METHODS
-    // ============================================================
 
     /**
      * Build PostgREST filter query array from filters map.
@@ -760,7 +750,6 @@ class SupabaseService
             'status_code' => $statusCode,
         ]);
 
-        // --- Sanitize: return safe messages for user-facing display ---
 
         // Auth errors from Supabase - sanitize to generic messages
         // Bikin pesan yang ramah user buat error seputar otentikasi
@@ -785,7 +774,7 @@ class SupabaseService
             return 'Terlalu banyak percobaan. Silakan coba lagi nanti.';
         }
 
-        // For all other errors (403, 404, 409, 5xx), return generic messages
+        // Menangani error
         // to prevent leaking table names, column names, or schema details
         // Buat error lain (kayak server nge-lag dll), kembalikan pesan umum aja
         return 'Terjadi kesalahan pada server. Silakan coba lagi.';

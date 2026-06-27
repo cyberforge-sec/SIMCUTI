@@ -61,7 +61,7 @@ class CaptchaService
         // Store session key in Laravel session
         Session::put('captcha_key', $sessionKey);
 
-        // Create image with GD
+        // Membuat gambar Captcha
         $image = imagecreatetruecolor($this->width, $this->height);
 
         // Gradient background
@@ -142,7 +142,7 @@ class CaptchaService
         $sessionKey = Session::get('captcha_key');
         if (!$sessionKey) return false;
 
-        // Get captcha from Supabase using service role key (bypass RLS)
+        // Mengambil Captcha
         // Must use admin because user is not authenticated yet during login/register
         $records = $this->getCaptchaRecord($sessionKey);
         if (empty($records)) {
@@ -152,13 +152,13 @@ class CaptchaService
 
         $captchaData = $records[0];
 
-        // Check expiry
+        // Mengecek kedaluwarsa
         if (strtotime($captchaData['expires_at']) < time()) {
             $this->cleanup($sessionKey);
             return false;
         }
 
-        // Check attempts
+        // Mengecek batas percobaan
         if ($captchaData['attempts'] >= config('captcha.max_attempts', 3)) {
             $this->cleanup($sessionKey);
             return false;

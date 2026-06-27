@@ -81,7 +81,7 @@ class SettingsController extends Controller
             return back()->withErrors(['current_password' => 'Password saat ini salah.']);
         }
 
-        // Update password
+        // Memperbarui password
         $accessToken = $signInResult['data']['access_token'];
         $result = $this->supabase->updatePassword($request->new_password, $accessToken);
 

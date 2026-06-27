@@ -112,7 +112,7 @@ class UserController extends Controller
             'jatah_cuti_tahunan' => 'integer|min:0|max:365',
         ]);
 
-        // Create auth user via Supabase Admin API
+        // Membuat pengguna autentikasi
         $authResult = $this->supabase->adminCreateUser(
             $request->email,
             $request->password,
@@ -150,7 +150,7 @@ class UserController extends Controller
             }
         }
 
-        // Update leave balance (trigger already created it, ensure correct values)
+        // Memperbarui sisa cuti
         $this->supabase->update('leave_balances', ['user_id' => $userId, 'tahun' => date('Y')], [
             'total_jatah' => $request->jatah_cuti_tahunan ?? 12,
             'terpakai' => 0,
