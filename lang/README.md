@@ -1,3 +1,3 @@
 # lang
 
-Folder ini untuk menyimpan kamus/teks bahasa terjemahan.
+Menyimpan seluruh teks bahasa dan terjemahan
