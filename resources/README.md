@@ -1,3 +1,3 @@
 # resources
 
-Folder ini untuk menyimpan tampilan antarmuka (views) dan aset CSS/JS mentah.
+Menyimpan tampilan antarmuka (views) dan aset mentah
