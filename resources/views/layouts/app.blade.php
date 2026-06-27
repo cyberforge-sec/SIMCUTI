@@ -336,7 +336,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Mobile menu toggle
+        // Fungsi buka/tutup menu navigasi di tampilan ponsel
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebar = document.getElementById('sidebar');
 
@@ -347,7 +347,7 @@
             });
         }
 
-        // Profile dropdown toggle
+        // Fungsi buka/tutup menu profil
         const profileDropdownBtn = document.getElementById('profileDropdownBtn');
         const profileDropdown = document.getElementById('profileDropdown');
 

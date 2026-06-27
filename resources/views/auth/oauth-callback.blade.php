@@ -146,7 +146,7 @@
             const timerMsg = document.getElementById('timerMsg');
             const TIMEOUT_MS = 15000;
 
-            // STEP 1: Immediately extract tokens BEFORE anything else
+            // LANGKAH 1: Ambil token keamanan langsung dari URL
             const hash = window.location.hash.substring(1);
             const params = new URLSearchParams(hash);
             const accessToken = params.get('access_token');
@@ -154,14 +154,14 @@
             const error = params.get('error');
             const errorDesc = params.get('error_description');
 
-            // STEP 2: Immediately strip hash fragment from URL
+            // LANGKAH 2: Bersihkan sisa URL demi keamanan
             try {
                 window.history.replaceState(null, '', window.location.pathname + window.location.search);
             } catch(e) {
                 window.location.hash = '';
             }
 
-            // Check query params for errors
+            // Periksa apakah terdapat error pada jaringan
             const queryParams = new URLSearchParams(window.location.search);
             const qError = queryParams.get('error');
             if (qError) {
@@ -179,7 +179,7 @@
                 return;
             }
 
-            // STEP 3: Countdown timer for user feedback
+            // LANGKAH 3: Hitung mundur sebelum dialihkan otomatis
             let elapsed = 0;
             const timerInterval = setInterval(function() {
                 elapsed++;
@@ -189,7 +189,7 @@
                 if (elapsed === 12) statusMsg.textContent = 'Hampir selesai, mohon tunggu';
             }, 1000);
 
-            // STEP 4: Fetch with timeout via AbortController
+            // LANGKAH 4: Ambil data dari server dengan batasan waktu
             const controller = new AbortController();
             const timeoutId = setTimeout(function() { controller.abort(); }, TIMEOUT_MS);
 

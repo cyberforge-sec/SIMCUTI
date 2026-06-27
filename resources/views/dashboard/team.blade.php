@@ -155,7 +155,7 @@
 
 @push('scripts')
 <script>
-// Simple search filter
+// Logika fitur pencarian
 const searchInput = document.getElementById('searchInput');
 const tableRows = document.querySelectorAll('#teamTable tbody tr');
 

@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 // Nampilin halaman login di root (biar nggak kena redirect 302 yang bisa ngilangin URL fragment kayak access_token dari Supabase)
 Route::get('/', [AuthController::class, 'showLogin']);
 
-// GUEST ROUTES (Rute buat yang belum login)
+// RUTE PUBLIK (Tanpa Login)
 Route::middleware('guest')->group(function () {
     // Autentikasi / Login
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -63,7 +63,7 @@ Route::middleware(['supabase.auth', '2fa'])->group(function () {
     // Halaman Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // SEMUA ROLE: Pengelolaan Cuti (Leave Management)
+    // SEMUA ROLE: Pengelolaan Cuti
     Route::prefix('leave')->name('leave.')->group(function () {
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
         Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
@@ -125,7 +125,7 @@ Route::middleware(['supabase.auth', '2fa'])->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         Route::get('/activity-logs/data', [ActivityLogController::class, 'data'])->name('activity-logs.data');
 
-        // Maintenance: endpoint khusus admin buat bersihin cache. Pastiin tetap terlindungi kalau di production.
+        // Perawatan: jalur khusus admin untuk membersihkan cache. Pastikan tetap aman.
         Route::post('/clear-cache', function() {
             \Illuminate\Support\Facades\Artisan::call('optimize:clear');
             if (function_exists('opcache_reset')) {

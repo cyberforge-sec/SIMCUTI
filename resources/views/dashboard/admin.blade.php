@@ -130,7 +130,7 @@
 </div>
 
 <script>
-    // Micro-interactions for cards
+    // Logika efek animasi pada elemen kartu
     document.querySelectorAll('.glass-card').forEach(card => {
         card.addEventListener('mouseenter', () => {
             card.style.transform = 'translateY(-4px)';

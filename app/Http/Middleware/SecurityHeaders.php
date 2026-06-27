@@ -56,7 +56,7 @@ class SecurityHeaders
             );
         }
 
-        // XSS Protection (legacy, useful for older browsers)
+        // Perlindungan XSS (untuk browser versi lama)
         $response->headers->set('X-XSS-Protection', '1; mode=block');
 
         return $response;

@@ -21,13 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
             '2fa' => TwoFactorMiddleware::class,
         ]);
 
-        // Add security headers to all web responses
+        // Tambahkan header keamanan ke semua respons website
         $middleware->web(append: [
             SecurityHeaders::class,
         ]);
 
-        // Trust Cloudflare Tunnel proxy — reads X-Forwarded-Proto, X-Forwarded-For, etc.
-        // Cloudflare Tunnel forwards traffic from edge to origin with these headers.
+        // Izinkan akses proxy Cloudflare Tunnel
+        // Konfigurasi penerusan jaringan Cloudflare
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -67,7 +67,7 @@ class SupabaseAuth
             return false;
         }
 
-        // Regenerate session ID to prevent session fixation attacks BEFORE storing data
+        // Perbarui ID sesi untuk mencegah serangan fiksasi sesi
         Session::regenerate();
         Session::put('user_id', $user['id']);
         Session::put('user_name', $profile['full_name']);

@@ -269,7 +269,7 @@
 
 @push('scripts')
 <script>
-// Filter dropdown toggle
+// Fungsi buka/tutup menu penyaring (filter)
 const filterBtn = document.getElementById('filterBtn');
 const filterDropdown = document.getElementById('filterDropdown');
 
@@ -286,7 +286,7 @@ if (filterBtn && filterDropdown) {
     });
 }
 
-// Search with debounce
+// Fungsi pencarian otomatis dengan jeda pengetikan (debounce)
 const searchInput = document.getElementById('searchInput');
 const searchForm = document.getElementById('searchForm');
 let searchTimeout;
@@ -300,7 +300,7 @@ if (searchInput && searchForm) {
     });
 }
 
-// Export to CSV
+// Fungsi unduh data ke format CSV
 const exportBtn = document.getElementById('exportBtn');
 if (exportBtn) {
     exportBtn.addEventListener('click', () => {
@@ -329,7 +329,7 @@ if (exportBtn) {
     });
 }
 
-// Micro-interactions
+// Efek interaksi animasi ringan
 document.querySelectorAll('button').forEach(button => {
     button.addEventListener('mousedown', () => {
         button.classList.add('scale-95');
@@ -342,7 +342,7 @@ document.querySelectorAll('button').forEach(button => {
     });
 });
 
-// Delete user
+// Fungsi untuk menghapus pengguna
 function deleteUser(id, nama) {
     Swal.fire({
         title: 'Nonaktifkan User?',

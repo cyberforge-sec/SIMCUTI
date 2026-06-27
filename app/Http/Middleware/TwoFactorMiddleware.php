@@ -16,21 +16,21 @@ class TwoFactorMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
-        // If user has 2FA enabled but hasn't verified yet, redirect to 2FA page
+        // Jika user mengaktifkan 2FA tapi belum diverifikasi, arahkan ke halaman 2FA
         if (Session::get('2fa_required') && !Session::get('2fa_verified')) {
-            // Allow access to 2FA verification routes
+            // Izinkan akses ke halaman rute verifikasi 2FA
             if ($request->routeIs('2fa.*') || $request->routeIs('logout')) {
                 return $next($request);
             }
             return redirect()->route('2fa.show');
         }
 
-        // Server-side validation: check 2FA verification timestamp
+        // Validasi server: periksa waktu verifikasi 2FA
         // Mencegah manipulasi sesi
         if (Session::get('2fa_verified')) {
             $verifiedAt = Session::get('2fa_verified_at');
 
-            // If no timestamp exists but 2fa_verified is true, session may be tampered
+            // Jika tidak ada data waktu verifikasi, sesi berpotensi dimanipulasi
             if (!$verifiedAt) {
                 Session::put('2fa_verified', false);
                 if ($request->routeIs('2fa.*') || $request->routeIs('logout')) {

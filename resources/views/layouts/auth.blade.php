@@ -24,13 +24,13 @@
             
             if (accessToken) {
                 if (type === 'recovery') {
-                    // Show loading state
+                    // Tampilkan status memuat (loading)
                     document.addEventListener("DOMContentLoaded", function() {
                         document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;font-size:24px;">Memproses link reset password... Mohon tunggu.</div>';
                     });
                     window.location.href = '/reset-password?token=' + encodeURIComponent(accessToken) + '&type=recovery&is_access_token=1';
                 } else if (type === 'signup') {
-                    // For email verification signup, just remove the hash and alert them to login
+                    // Bersihkan tautan verifikasi email dan minta pengguna untuk masuk
                     window.location.hash = '';
                     document.addEventListener("DOMContentLoaded", function() {
                         Swal.fire({
@@ -41,7 +41,7 @@
                         });
                     });
                 } else {
-                    // Other token types, just clear the hash
+                    // Bersihkan sisa token di URL
                     window.location.hash = '';
                 }
             }
@@ -259,7 +259,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Password toggle
+        // Fungsi sembunyikan/tampilkan password
         function togglePassword(inputId, btnEl) {
             const input = document.getElementById(inputId);
             if (!input) return;
@@ -270,7 +270,7 @@
             }
         }
 
-        // Captcha refresh
+        // Fungsi muat ulang gambar Captcha
         function refreshCaptcha() {
             fetch('/captcha/refresh', {
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
@@ -284,7 +284,7 @@
             });
         }
 
-        // Calendar Slider
+        // Fungsi geser kalender
         const months = [
             { name: "Januari", days: 31, startDay: 4 },
             { name: "Februari", days: 28, startDay: 0 },
@@ -337,7 +337,7 @@
             }, 5000);
         }
 
-        // SweetAlert2 toasts
+        // Fungsi notifikasi popup interaktif
         @if(session('success'))
             Swal.fire({
                 icon: 'success',
