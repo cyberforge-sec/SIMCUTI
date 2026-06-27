@@ -1,3 +1,3 @@
 # app
 
-Folder ini berisi logika utama aplikasi (seperti Controllers, Models, dan Middleware).
+Berisi logika utama aplikasi dan kontroler
