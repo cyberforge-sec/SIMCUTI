@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman karyawan. --}
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
@@ -250,4 +251,4 @@
     </div>
 </div>
 @endsection
-  
+   
