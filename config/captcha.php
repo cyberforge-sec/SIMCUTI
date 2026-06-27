@@ -2,18 +2,11 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Captcha Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the captcha settings for the application.
-    |
-    */
+    
 
     'length' => env('CAPTCHA_LENGTH', 6),
     
-    'expiry' => env('CAPTCHA_EXPIRY', 300), // seconds (5 minutes)
+    'expiry' => env('CAPTCHA_EXPIRY', 300), 
     
     'max_attempts' => 3,
     
@@ -29,15 +22,15 @@ return [
     
     'rotation_max' => 20,
     
-    'characters' => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', // Exclude confusing: O, 0, I, 1, l
+    'characters' => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 
     
     'colors' => [
-        'background_start' => [79, 70, 229],   // Primary color
-        'background_end' => [67, 56, 202],     // Primary dark
-        'text' => [255, 255, 255],             // White
-        'shadow' => [0, 0, 0],                 // Black
-        'line' => [129, 140, 248],             // Primary light
-        'dot' => [203, 213, 225],              // Gray
+        'background_start' => [79, 70, 229],   
+        'background_end' => [67, 56, 202],     
+        'text' => [255, 255, 255],             
+        'shadow' => [0, 0, 0],                 
+        'line' => [129, 140, 248],             
+        'dot' => [203, 213, 225],              
     ],
 
 ];
