@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman index. --}
 @extends('layouts.app')
 
 @section('title', 'Pengajuan Cuti Saya')
@@ -176,4 +177,4 @@ function cancelLeave(id) {
 </script>
 @endpush
 @endsection
-  
+   
