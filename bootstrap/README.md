@@ -1,3 +1,3 @@
 # bootstrap
 
-Folder ini berisi skrip untuk memuat framework (startup) dan konfigurasi cache awal.
+Digunakan untuk memuat sistem awal framework
