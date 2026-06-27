@@ -163,4 +163,4 @@ function deleteType(id, nama) {
 }
 </script>
 @endpush
- 
+  
