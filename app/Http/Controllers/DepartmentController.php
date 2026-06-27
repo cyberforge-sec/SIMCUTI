@@ -11,12 +11,14 @@ class DepartmentController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Menampilkan halaman utama atau daftar data
     public function index()
     {
         $departments = $this->supabase->selectAdvanced('departments', [
@@ -38,6 +40,7 @@ class DepartmentController extends Controller
         return view('departments.index', compact('departments'));
     }
 
+    // Menampilkan form untuk membuat data baru
     public function create()
     {
         // Get available managers (role = manager, not already assigned)
@@ -49,6 +52,7 @@ class DepartmentController extends Controller
         return view('departments.form', compact('managers'));
     }
 
+    // Memproses dan menyimpan data baru ke database
     public function store(Request $request)
     {
         $request->validate([
@@ -96,6 +100,7 @@ class DepartmentController extends Controller
         return back()->withErrors(['error' => $result['error'] ?? 'Gagal menambahkan departemen.'])->withInput();
     }
 
+    // Menampilkan form untuk mengubah data
     public function edit(string $id)
     {
         $department = $this->supabase->selectSingle('departments', 'id', $id);
@@ -111,6 +116,7 @@ class DepartmentController extends Controller
         return view('departments.form', compact('department', 'managers'));
     }
 
+    // Memproses dan memperbarui data di database
     public function update(Request $request, string $id)
     {
         $request->validate([
@@ -145,6 +151,7 @@ class DepartmentController extends Controller
         return back()->withErrors(['error' => $result['error'] ?? 'Gagal memperbarui departemen.'])->withInput();
     }
 
+    // Menghapus data dari database
     public function destroy(string $id)
     {
         $result = $this->supabase->update('departments', ['id' => $id], [

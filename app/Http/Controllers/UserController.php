@@ -13,12 +13,14 @@ class UserController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Menampilkan halaman utama atau daftar data
     public function index(Request $request)
     {
         // Single query — ambil semua data sekaligus
@@ -90,12 +92,14 @@ class UserController extends Controller
         return view('users.index', compact('paginatedUsers', 'stats'));
     }
 
+    // Menampilkan form untuk membuat data baru
     public function create()
     {
         $departments = $this->supabase->select('departments', 'id,nama', ['is_active' => 'true']);
         return view('users.form', compact('departments'));
     }
 
+    // Memproses dan menyimpan data baru ke database
     public function store(Request $request)
     {
         $request->validate([
@@ -158,6 +162,7 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
     }
 
+    // Menampilkan form untuk mengubah data
     public function edit(string $id)
     {
         $user = $this->supabase->selectSingle('profiles', 'id', $id);
@@ -169,6 +174,7 @@ class UserController extends Controller
         return view('users.form', compact('user', 'departments'));
     }
 
+    // Memproses dan memperbarui data di database
     public function update(Request $request, string $id)
     {
         $request->validate([
@@ -197,6 +203,7 @@ class UserController extends Controller
         return back()->withErrors(['error' => $result['error'] ?? 'Gagal memperbarui user.'])->withInput();
     }
 
+    // Fungsi untuk menangani proses toggleActive
     public function toggleActive(string $id)
     {
         $user = $this->supabase->selectSingle('profiles', 'id', $id);
@@ -213,6 +220,7 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', "User berhasil {$action}.");
     }
 
+    // Menghapus data dari database
     public function destroy(string $id)
     {
         // Soft delete: deactivate instead of delete

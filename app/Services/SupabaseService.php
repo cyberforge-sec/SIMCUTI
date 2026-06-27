@@ -15,6 +15,7 @@ class SupabaseService
     protected string $anonKey;
     protected string $bucket;
 
+    // Menginisialisasi class dan dependensi
     public function __construct()
     {
         $this->url = rtrim(config('services.supabase.url'), '/');

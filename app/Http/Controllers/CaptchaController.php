@@ -8,11 +8,13 @@ class CaptchaController extends Controller
 {
     protected CaptchaService $captcha;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(CaptchaService $captcha)
     {
         $this->captcha = $captcha;
     }
 
+    // Fungsi untuk menangani proses generate
     public function generate()
     {
         $imageData = $this->captcha->create();
@@ -24,6 +26,7 @@ class CaptchaController extends Controller
             ->header('Expires', '0');
     }
 
+    // Fungsi untuk menangani proses refresh
     public function refresh()
     {
         $imageData = $this->captcha->create();

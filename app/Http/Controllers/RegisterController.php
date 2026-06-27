@@ -15,6 +15,7 @@ class RegisterController extends Controller
     protected CaptchaService $captcha;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, CaptchaService $captcha, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
@@ -22,6 +23,7 @@ class RegisterController extends Controller
         $this->activityLog = $activityLog;
     }
 
+    // Fungsi untuk menangani proses showRegister
     public function showRegister()
     {
         if (Session::has('user_id')) {
@@ -32,6 +34,7 @@ class RegisterController extends Controller
         return view('auth.register', compact('captchaImage'));
     }
 
+    // Menangani proses pendaftaran pengguna baru
     public function register(Request $request)
     {
         $request->validate([

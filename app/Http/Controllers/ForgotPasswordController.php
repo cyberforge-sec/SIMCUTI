@@ -13,17 +13,20 @@ class ForgotPasswordController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Fungsi untuk menangani proses showForgotPassword
     public function showForgotPassword()
     {
         return view('auth.forgot-password');
     }
 
+    // Fungsi untuk menangani proses sendResetLink
     public function sendResetLink(Request $request)
     {
         $request->validate([
@@ -54,6 +57,7 @@ class ForgotPasswordController extends Controller
         return back()->with('success', 'Jika email terdaftar, link reset password telah dikirim. Silakan cek inbox atau folder spam.');
     }
 
+    // Fungsi untuk menangani proses showResetPassword
     public function showResetPassword(Request $request)
     {
         // Supabase redirects here with ?token=xxx&type=recovery
@@ -70,6 +74,7 @@ class ForgotPasswordController extends Controller
         return view('auth.reset-password', compact('token', 'type', 'isAccessToken'));
     }
 
+    // Fungsi untuk menangani proses resetPassword
     public function resetPassword(Request $request)
     {
         $request->validate([

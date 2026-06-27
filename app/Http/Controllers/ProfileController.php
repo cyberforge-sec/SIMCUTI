@@ -13,12 +13,14 @@ class ProfileController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Menampilkan form untuk mengubah data
     public function edit()
     {
         $userId = Session::get('user_id');
@@ -29,6 +31,7 @@ class ProfileController extends Controller
         return view('profile.edit', compact('profile', 'departments'));
     }
 
+    // Memproses dan memperbarui data di database
     public function update(Request $request)
     {
         $userId = Session::get('user_id');
@@ -72,6 +75,7 @@ class ProfileController extends Controller
      */
     protected const MAX_IMAGE_PIXELS = 50_000_000;
 
+    // Fungsi untuk menangani proses updatePhoto
     public function updatePhoto(Request $request)
     {
         $userId = Session::get('user_id');
@@ -144,6 +148,7 @@ class ProfileController extends Controller
         return back()->withErrors(['photo' => 'Gagal upload foto.']);
     }
 
+    // Fungsi untuk menangani proses deletePhoto
     public function deletePhoto()
     {
         $userId = Session::get('user_id');
@@ -160,6 +165,7 @@ class ProfileController extends Controller
         return redirect()->route('profile.edit')->with('success', 'Foto profil berhasil dihapus.');
     }
 
+    // Menghapus data dari database
     public function destroy(Request $request)
     {
         $request->validate([

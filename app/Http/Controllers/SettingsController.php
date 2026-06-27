@@ -12,12 +12,14 @@ class SettingsController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Menampilkan halaman utama atau daftar data
     public function index()
     {
         $userId = Session::get('user_id');
@@ -26,6 +28,7 @@ class SettingsController extends Controller
         return view('settings.index', compact('profile'));
     }
 
+    // Fungsi untuk menangani proses toggle2FA
     public function toggle2FA(Request $request)
     {
         $userId = Session::get('user_id');
@@ -50,6 +53,7 @@ class SettingsController extends Controller
         return back()->withErrors(['error' => 'Gagal mengubah pengaturan 2FA.']);
     }
 
+    // Fungsi untuk menangani proses changePassword
     public function changePassword(Request $request)
     {
         $request->validate([

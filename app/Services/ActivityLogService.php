@@ -8,6 +8,7 @@ class ActivityLogService
 {
     protected SupabaseService $supabase;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase)
     {
         $this->supabase = $supabase;

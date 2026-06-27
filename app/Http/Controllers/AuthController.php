@@ -18,6 +18,7 @@ class AuthController extends Controller
     protected CaptchaService $captcha;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, CaptchaService $captcha, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
@@ -25,34 +26,40 @@ class AuthController extends Controller
         $this->activityLog = $activityLog;
     }
 
+    // Fungsi untuk menangani proses showLogin
     public function showLogin()
     {
+        // Kalau user sudah login dan 2FA sudah terverifikasi, langsung diarahkan ke dashboard
         if (Session::has('user_id') && Session::get('2fa_verified')) {
             return redirect()->route('dashboard');
         }
 
+        // Bikin gambar captcha baru untuk halaman login
         $captchaImage = $this->captcha->create();
         return view('auth.login', compact('captchaImage'));
     }
 
+    // Menangani proses login pengguna
     public function login(Request $request)
     {
+        // Validasi input dari form login
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
             'captcha' => 'required|string',
         ]);
 
-        // Verify captcha
+        // Cek apakah captcha yang dimasukkan benar
         if (!$this->captcha->verify($request->captcha)) {
             return back()->withErrors(['captcha' => 'Kode captcha tidak valid.'])->withInput();
         }
 
-        // Rate limiting check (via Cache, tied to IP+email — not bypassable by clearing cookies)
+        // Pengecekan rate limiting (berdasarkan IP dan email untuk mencegah brute force)
         $rateLimitKey = 'login_attempts:' . md5($request->ip() . '|' . $request->email);
         $lockKey = 'login_locked:' . md5($request->ip() . '|' . $request->email);
         $attempts = (int) Cache::get($rateLimitKey, 0);
 
+        // Kalau akun sedang dikunci, beri tahu user untuk menunggu
         if (Cache::has($lockKey)) {
             $lockedUntil = Cache::get($lockKey);
             $minutes = max(1, now()->diffInMinutes($lockedUntil));
@@ -61,21 +68,24 @@ class AuthController extends Controller
             ])->withInput();
         }
 
-        // Attempt login via Supabase
+        // Proses login menggunakan Supabase
         $result = $this->supabase->signIn($request->email, $request->password);
 
         if (!$result['success']) {
             $errorMsg = $result['error'] ?? '';
+            
+            // Cek jika email belum diverifikasi
             if (str_contains($errorMsg, 'email_not_confirmed')) {
                 return back()->withErrors([
                     'email' => 'Email belum diverifikasi. Silakan cek kotak masuk email Anda dan klik link verifikasi sebelum login.',
                 ])->withInput();
             }
 
-            // Increment failed attempts in cache (persists across sessions)
+            // Tambah jumlah percobaan gagal ke dalam cache
             $attempts++;
             Cache::put($rateLimitKey, $attempts, now()->addMinutes(15));
 
+            // Kunci akun kalau gagal lebih dari 5 kali
             if ($attempts >= 5) {
                 Cache::put($lockKey, now()->addMinutes(15), now()->addMinutes(15));
                 return back()->withErrors([
@@ -83,7 +93,7 @@ class AuthController extends Controller
                 ])->withInput();
             }
 
-            // Always return generic message to prevent information disclosure
+            // Pesan error umum agar tidak membocorkan info kredensial
             return back()->withErrors([
                 'email' => 'Email atau password salah.',
             ])->withInput();
@@ -94,7 +104,7 @@ class AuthController extends Controller
         $accessToken = $authData['access_token'];
         $refreshToken = $authData['refresh_token'];
 
-        // Get profile from Supabase using service key (bypasses RLS infinite recursion)
+        // Ambil data profil dari Supabase pakai service key (untuk bypass RLS)
         $profiles = $this->supabase->selectAdmin('profiles', '*', ['id' => $userId]);
         $profile = !empty($profiles) ? $profiles[0] : null;
 
@@ -103,13 +113,13 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Profil tidak ditemukan. Hubungi administrator.'])->withInput();
         }
 
-        // Check if account is active
+        // Pastikan akun user masih aktif
         if (!$profile['is_active']) {
             $this->supabase->signOut($accessToken);
             return back()->withErrors(['email' => 'Akun Anda tidak aktif. Hubungi administrator.'])->withInput();
         }
 
-        // Check if account is locked
+        // Cek lagi apakah akun ini terkunci dari database
         if (isset($profile['locked_until']) && $profile['locked_until']) {
             if (now()->lt($profile['locked_until'])) {
                 $this->supabase->signOut($accessToken);
@@ -117,7 +127,7 @@ class AuthController extends Controller
             }
         }
 
-        // Reset failed attempts
+        // Reset jumlah percobaan gagal karena sudah berhasil login
         $this->supabase->update('profiles', ['id' => $userId], [
             'failed_login_attempts' => 0,
             'locked_until' => null,
@@ -125,14 +135,14 @@ class AuthController extends Controller
             'last_login_ip' => $request->ip(),
         ], true);
 
-        // Clear rate limiting on successful login
+        // Hapus limit login yang ada di cache
         Cache::forget($rateLimitKey);
         Cache::forget($lockKey);
 
-        // Regenerate session ID to prevent session fixation attacks BEFORE storing data
+        // Buat session ID baru untuk mencegah serangan session fixation sebelum simpan data
         Session::regenerate();
 
-        // Store session data
+        // Simpan data user ke dalam session
         Session::put('user_id', $userId);
         Session::put('user_name', $profile['full_name']);
         Session::put('user_email', $request->email);
@@ -148,7 +158,7 @@ class AuthController extends Controller
         }
         Session::put('profile_photo_url', $photoUrl);
 
-        // Check if 2FA is enabled for this user (respects profile setting)
+        // Cek apakah user mengaktifkan fitur 2FA
         $twoFactorEnabled = $profile['two_factor_enabled'] ?? false;
         Session::put('2fa_required', $twoFactorEnabled);
         Session::put('2fa_verified', !$twoFactorEnabled);
@@ -156,32 +166,37 @@ class AuthController extends Controller
             Session::put('2fa_verified_at', now()->toIso8601String());
         }
 
+        // Jika 2FA aktif, kirim kodenya dan arahkan ke halaman verifikasi
         if ($twoFactorEnabled) {
             $this->generateAndSend2FACode($userId, $request->email, $profile['full_name']);
             $this->activityLog->log('login', 'Login (menunggu verifikasi 2FA)', null, null, $userId);
             return redirect()->route('2fa.show');
         }
 
+        // Catat aktivitas login dan masuk ke dashboard
         $this->activityLog->log('login', 'Login berhasil');
         return redirect()->route('dashboard');
     }
 
+    // Menangani proses logout pengguna
     public function logout(Request $request)
     {
         $userId = Session::get('user_id');
         $accessToken = Session::get('supabase_access_token');
 
+        // Logout dari sistem dan Supabase kalau tokennya ada
         if ($userId && $accessToken) {
             $this->activityLog->log('logout', 'Logout', null, null, $userId);
             $this->supabase->signOut($accessToken);
         }
 
+        // Bersihkan semua session yang tersimpan
         Session::flush();
         return redirect()->route('login');
     }
 
     /**
-     * Redirect to OAuth provider (github, google)
+     * Redirect ke halaman provider OAuth (seperti github atau google)
      */
     public function oauthRedirect(Request $request, string $provider)
     {
@@ -189,9 +204,9 @@ class AuthController extends Controller
             abort(404);
         }
 
-        // Generate a CSRF nonce and store it in session for validation on callback.
-        // The nonce stays in session only — NOT embedded in the redirect_to URL.
-        // This prevents nonce exposure in third-party OAuth URLs (Google, GitHub).
+        // Buat token nonce untuk keamanan CSRF dan simpan di session
+        // Nonce ini cuma ada di session, nggak dimasukkan ke URL redirect
+        // Ini mencegah token nonce terekspos di URL pihak ketiga
         $oauthNonce = bin2hex(random_bytes(16));
         Session::put('oauth_nonce', $oauthNonce);
         Session::put('oauth_nonce_at', now()->toIso8601String());
@@ -207,7 +222,7 @@ class AuthController extends Controller
     }
 
     /**
-     * OAuth callback page (Supabase redirects here with tokens in URL hash)
+     * Halaman callback OAuth (Supabase akan redirect ke sini bawa token di URL hash)
      */
     public function oauthCallback()
     {
@@ -215,7 +230,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle OAuth access token (called via AJAX from callback page)
+     * Proses token akses OAuth (dipanggil via AJAX dari halaman callback)
      */
     public function oauthHandle(Request $request)
     {
@@ -224,10 +239,8 @@ class AuthController extends Controller
             'refresh_token' => 'required|string',
         ]);
 
-        // Validate that an OAuth flow was initiated by THIS session (CSRF protection).
-        // The nonce was stored server-side in session by oauthRedirect() — never exposed in URLs.
-        // This ensures the callback is a legitimate response to a user-initiated OAuth flow,
-        // not an attacker trying to inject their own tokens into a victim's session.
+        // Cek validitas sesi OAuth (proteksi CSRF)
+        // Pastikan nonce yang ada di server sesuai biar terhindar dari serangan
         $storedNonceAt = Session::get('oauth_nonce_at');
         $hasNonce = Session::has('oauth_nonce');
         Session::forget('oauth_nonce');
@@ -240,6 +253,7 @@ class AuthController extends Controller
         $accessToken = $request->access_token;
         $refreshToken = $request->refresh_token;
 
+        // Verifikasi token yang didapat dari provider
         $user = $this->supabase->verifyAccessToken($accessToken);
         if (!$user) {
             return response()->json(['success' => false, 'error' => 'Token OAuth tidak valid.'], 401);
@@ -247,9 +261,11 @@ class AuthController extends Controller
 
         $userId = $user['id'];
 
+        // Ambil data profil dari database Supabase
         $profiles = $this->supabase->selectAdmin('profiles', '*', ['id' => $userId]);
         $profile = !empty($profiles) ? $profiles[0] : null;
 
+        // Kalau profil belum ada, buat profil baru untuk user ini
         if (!$profile) {
             $email = $user['email'] ?? $user['user_metadata']['email'] ?? '';
             $fullName = $user['user_metadata']['full_name']
@@ -274,6 +290,8 @@ class AuthController extends Controller
             if ($profileResult['success']) {
                 $profiles = $this->supabase->selectAdmin('profiles', '*', ['id' => $userId]);
                 $profile = !empty($profiles) ? $profiles[0] : $profileData;
+                
+                // Beri jatah cuti awal untuk pengguna baru
                 $this->supabase->update('leave_balances', ['user_id' => $userId, 'tahun' => date('Y')], [
                     'total_jatah' => 12,
                     'terpakai' => 0,
@@ -284,16 +302,18 @@ class AuthController extends Controller
             }
         }
 
+        // Tolak kalau akunnya tidak aktif
         if (!$profile['is_active']) {
             return response()->json(['success' => false, 'error' => 'Akun Anda tidak aktif. Hubungi administrator.'], 403);
         }
 
+        // Update info waktu dan IP login terakhir
         $this->supabase->update('profiles', ['id' => $userId], [
             'last_login_at' => now()->toIso8601String(),
             'last_login_ip' => $request->ip(),
         ], true);
 
-        // Regenerate session ID to prevent session fixation attacks BEFORE storing data
+        // Regenerasi ID session untuk keamanan sebelum simpan data
         Session::regenerate();
         Session::put('user_id', $userId);
         Session::put('user_name', $profile['full_name']);
@@ -310,7 +330,7 @@ class AuthController extends Controller
         }
         Session::put('profile_photo_url', $photoUrl);
 
-        // Check if 2FA is enabled for this user (respects profile setting)
+        // Cek setelan 2FA dari profil user
         $twoFactorEnabled = $profile['two_factor_enabled'] ?? false;
         Session::put('2fa_required', $twoFactorEnabled);
         Session::put('2fa_verified', !$twoFactorEnabled);
@@ -318,6 +338,7 @@ class AuthController extends Controller
             Session::put('2fa_verified_at', now()->toIso8601String());
         }
 
+        // Kirim kode 2FA kalau fiturnya aktif
         if ($twoFactorEnabled) {
             $emailFor2FA = $user['email'] ?? $user['user_metadata']['email'] ?? '';
             if (empty($emailFor2FA)) {
@@ -328,21 +349,25 @@ class AuthController extends Controller
             return response()->json(['success' => true, 'redirect' => route('2fa.show')]);
         }
 
+        // Catat aktivitas login OAuth dan arahkan ke dashboard
         $this->activityLog->log('login', 'Login via OAuth berhasil');
         return response()->json(['success' => true, 'redirect' => route('dashboard')]);
     }
 
     /**
-     * Generate and send 2FA code
+     * Bikin dan kirim kode 2FA
      */
     protected function generateAndSend2FACode(string $userId, string $email, string $userName): void
     {
+        // Bikin kode 6 digit secara acak
         $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
+        // Ubah kode lama jadi expired/used biar nggak bisa dipakai lagi
         $this->supabase->update('two_factor_codes', ['user_id' => $userId, 'used' => 'false'], [
             'used' => true,
         ], true);
 
+        // Simpan kode baru ke database dengan masa berlaku 10 menit
         $this->supabase->insert('two_factor_codes', [
             'user_id' => $userId,
             'kode' => $code,
@@ -350,6 +375,7 @@ class AuthController extends Controller
             'expires_at' => now()->addMinutes(10)->toIso8601String(),
         ], true);
 
+        // Kirim email kodenya (diulang sampai 2 kali kalau gagal)
         try {
             retry(2, function () use ($email, $code, $userName) {
                 Mail::to($email)->send(new TwoFactorCodeMail($code, $userName));

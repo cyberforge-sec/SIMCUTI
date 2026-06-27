@@ -11,17 +11,20 @@ class ActivityLogController extends Controller
     protected ActivityLogService $activityLog;
     protected SupabaseService $supabase;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(ActivityLogService $activityLog, SupabaseService $supabase)
     {
         $this->activityLog = $activityLog;
         $this->supabase = $supabase;
     }
 
+    // Menampilkan halaman utama atau daftar data
     public function index()
     {
         return view('activity-logs.index');
     }
 
+    // Fungsi untuk menangani proses data
     public function data(Request $request)
     {
         $options = [

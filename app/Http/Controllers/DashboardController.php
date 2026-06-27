@@ -11,12 +11,14 @@ class DashboardController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Menentukan tampilan dashboard sesuai dengan role pengguna yang login
     public function index()
     {
         $userId = Session::get('user_id');
@@ -29,8 +31,10 @@ class DashboardController extends Controller
         };
     }
 
+    // Menyiapkan data untuk dashboard karyawan (sisa cuti, riwayat, dll)
     protected function karyawanDashboard(string $userId)
     {
+        // Ambil sisa cuti pengguna untuk tahun ini
         $balances = $this->supabase->select('leave_balances', '*', [
             'user_id' => $userId,
             'tahun' => date('Y'),
@@ -43,6 +47,7 @@ class DashboardController extends Controller
             'order' => 'created_at.desc',
         ]);
 
+        // Hitung total pengajuan cuti berdasarkan masing-masing status
         $approvedCount = 0;
         $pendingCount = 0;
         $rejectedCount = 0;
@@ -75,8 +80,10 @@ class DashboardController extends Controller
         ));
     }
 
+    // Menyiapkan data dashboard untuk manager (berisi ringkasan cuti timnya)
     protected function managerDashboard(string $userId)
     {
+        // Cari tahu manager ini berada di departemen mana
         $profiles = $this->supabase->select('profiles', '*', ['id' => $userId]);
         $profile = !empty($profiles) ? $profiles[0] : null;
         $departmentId = $profile['department_id'] ?? null;
@@ -178,8 +185,10 @@ class DashboardController extends Controller
         ));
     }
 
+    // Menyiapkan data dashboard untuk admin (melihat keseluruhan data aplikasi)
     protected function adminDashboard(string $userId)
     {
+        // Ambil semua data pengguna yang masih aktif
         $allProfiles = $this->supabase->select('profiles', '*', ['is_active' => 'true']);
         $totalUsers = count($allProfiles);
 
@@ -265,6 +274,7 @@ class DashboardController extends Controller
         ));
     }
 
+    // Menampilkan halaman daftar anggota tim (khusus untuk role manager)
     public function team()
     {
         $role = Session::get('user_role');
@@ -325,6 +335,7 @@ class DashboardController extends Controller
         return view('dashboard.team', compact('teamMembers', 'departmentName'));
     }
 
+    // Menghitung data tren pengajuan cuti untuk 6 bulan terakhir
     protected function getMonthlyTrend(): array
     {
         $labels = [];

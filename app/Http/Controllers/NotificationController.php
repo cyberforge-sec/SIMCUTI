@@ -10,11 +10,13 @@ class NotificationController extends Controller
 {
     protected SupabaseService $supabase;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase)
     {
         $this->supabase = $supabase;
     }
 
+    // Menampilkan halaman utama atau daftar data
     public function index()
     {
         $userId = Session::get('user_id');
@@ -29,6 +31,7 @@ class NotificationController extends Controller
         return view('notifications.index', compact('notifications'));
     }
 
+    // Fungsi untuk menangani proses markRead
     public function markRead(string $id)
     {
         $userId = Session::get('user_id');
@@ -45,6 +48,7 @@ class NotificationController extends Controller
         return response()->json(['success' => false], 400);
     }
 
+    // Fungsi untuk menangani proses count
     public function count()
     {
         $userId = Session::get('user_id');

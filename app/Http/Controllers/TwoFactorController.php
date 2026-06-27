@@ -16,12 +16,14 @@ class TwoFactorController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Menampilkan detail dari data spesifik
     public function show()
     {
         if (!Session::get('2fa_required')) {
@@ -31,6 +33,7 @@ class TwoFactorController extends Controller
         return view('auth.two-factor');
     }
 
+    // Fungsi untuk menangani proses verify
     public function verify(Request $request)
     {
         $request->validate([
@@ -129,6 +132,7 @@ class TwoFactorController extends Controller
         return redirect()->route('dashboard');
     }
 
+    // Fungsi untuk menangani proses resend
     public function resend()
     {
         $userId = Session::get('user_id');

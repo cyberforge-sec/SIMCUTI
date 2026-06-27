@@ -11,12 +11,14 @@ class LeaveTypeController extends Controller
     protected SupabaseService $supabase;
     protected ActivityLogService $activityLog;
 
+    // Menginisialisasi class dan dependensi
     public function __construct(SupabaseService $supabase, ActivityLogService $activityLog)
     {
         $this->supabase = $supabase;
         $this->activityLog = $activityLog;
     }
 
+    // Menampilkan halaman utama atau daftar data
     public function index()
     {
         $leaveTypes = $this->supabase->selectAdvanced('leave_types', [
@@ -28,11 +30,13 @@ class LeaveTypeController extends Controller
         return view('leave-types.index', compact('leaveTypes'));
     }
 
+    // Menampilkan form untuk membuat data baru
     public function create()
     {
         return view('leave-types.form');
     }
 
+    // Memproses dan menyimpan data baru ke database
     public function store(Request $request)
     {
         $request->validate([
@@ -62,6 +66,7 @@ class LeaveTypeController extends Controller
         return back()->withErrors(['error' => $result['error'] ?? 'Gagal menambahkan jenis cuti.'])->withInput();
     }
 
+    // Menampilkan form untuk mengubah data
     public function edit(string $id)
     {
         $leaveType = $this->supabase->selectSingle('leave_types', 'id', $id);
@@ -72,6 +77,7 @@ class LeaveTypeController extends Controller
         return view('leave-types.form', compact('leaveType'));
     }
 
+    // Memproses dan memperbarui data di database
     public function update(Request $request, string $id)
     {
         $request->validate([
@@ -100,6 +106,7 @@ class LeaveTypeController extends Controller
         return back()->withErrors(['error' => $result['error'] ?? 'Gagal memperbarui jenis cuti.'])->withInput();
     }
 
+    // Menghapus data dari database
     public function destroy(string $id)
     {
         // Check if leave type is used
