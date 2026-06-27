@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman edit. --}
 @extends('layouts.app')
 
 @section('title', 'Edit Pengajuan Cuti')
@@ -89,4 +90,4 @@
 </script>
 @endpush
 @endsection
-  
+   
