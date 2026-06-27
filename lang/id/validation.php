@@ -151,4 +151,4 @@ return [
         'tanggal_selesai' => 'Tanggal selesai cuti',
         'leave_type_id' => 'Jenis cuti',
     ],
-];
+]; 
