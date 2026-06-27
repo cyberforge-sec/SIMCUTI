@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman index. --}
 @extends('layouts.app')
 
 @section('title', 'Departemen')
@@ -162,4 +163,4 @@ function deleteDept(id, nama) {
 }
 </script>
 @endpush
-  
+   
