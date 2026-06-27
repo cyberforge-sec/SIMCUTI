@@ -31,6 +31,17 @@
                 <form action="{{ route('leave.store') }}" method="POST" enctype="multipart/form-data" id="leaveForm" class="space-y-lg">
                     @csrf
 
+                    @if ($errors->any())
+                        <div class="p-md mb-lg bg-error/10 border border-error/20 rounded-xl">
+                            <ul class="list-disc list-inside text-error text-body-sm">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+
                     <!-- Leave Type -->
                     <div>
                         <label for="leave_type_id" class="block text-label-md font-label-md text-on-surface mb-sm">
