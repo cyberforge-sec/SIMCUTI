@@ -36,3 +36,4 @@ services:
 networks:
   simcuti:
     driver: bridge
+
