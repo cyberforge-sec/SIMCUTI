@@ -575,4 +575,4 @@ COMMENT ON TABLE leave_balances IS 'Annual leave balance tracking';
 COMMENT ON TABLE activity_logs IS 'System activity audit trail';
 COMMENT ON TABLE captcha_sessions IS 'Custom captcha session storage';
 COMMENT ON TABLE two_factor_codes IS 'Two-factor authentication codes';
-  
+   
