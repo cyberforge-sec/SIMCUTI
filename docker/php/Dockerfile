@@ -43,4 +43,4 @@ RUN mkdir -p /app/storage /app/bootstrap/cache \
 EXPOSE 9000
 
 CMD ["php-fpm"]
- 
+  
