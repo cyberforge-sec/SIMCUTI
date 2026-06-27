@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi koneksi ke berbagai sistem database.
+
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
@@ -145,4 +147,4 @@ return [
     ],
 
 ];
- 
+  
