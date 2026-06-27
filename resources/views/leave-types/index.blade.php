@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman index. --}
 @extends('layouts.app')
 
 @section('title', 'Jenis Cuti')
@@ -163,4 +164,4 @@ function deleteType(id, nama) {
 }
 </script>
 @endpush
-  
+   
