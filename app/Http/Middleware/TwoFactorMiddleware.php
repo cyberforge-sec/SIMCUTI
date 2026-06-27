@@ -55,4 +55,4 @@ class TwoFactorMiddleware
         return $next($request);
     }
 }
- 
+  
