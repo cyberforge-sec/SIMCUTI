@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman history. --}
 @extends('layouts.app')
 
 @section('title', 'Riwayat Cuti')
@@ -105,4 +106,4 @@
     </section>
 </div>
 @endsection
-  
+   
