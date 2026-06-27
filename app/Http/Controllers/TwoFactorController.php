@@ -173,4 +173,4 @@ class TwoFactorController extends Controller
         return back()->with('success', 'Kode verifikasi baru telah dikirim ke email Anda.');
     }
 }
- 
+  
