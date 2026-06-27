@@ -135,4 +135,4 @@ Route::middleware(['supabase.auth', '2fa'])->group(function () {
         })->name('maintenance.clear-cache');
     });
 });
- 
+  
