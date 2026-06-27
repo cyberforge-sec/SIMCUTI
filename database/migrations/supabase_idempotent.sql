@@ -462,3 +462,4 @@ INSERT INTO departments (nama, kode, deskripsi) VALUES
 ('Marketing Department', 'MKT', 'Marketing and Sales'),
 ('Operations Department', 'OPS', 'Operations')
 ON CONFLICT (kode) DO NOTHING;
+ 
