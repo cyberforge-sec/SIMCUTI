@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman two-factor. --}
 @extends('layouts.auth')
 
 @section('title', 'Verifikasi 2FA')
@@ -84,4 +85,4 @@
     });
 </script>
 @endpush
-  
+   
