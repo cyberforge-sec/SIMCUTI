@@ -166,3 +166,4 @@ class DepartmentController extends Controller
         return back()->withErrors(['error' => 'Gagal menghapus departemen.']);
     }
 }
+ 
