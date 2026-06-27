@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi layanan pihak ketiga (seperti API eksternal).
+
 return [
 
     
@@ -33,4 +35,4 @@ return [
     ],
 
 ];
- 
+  
