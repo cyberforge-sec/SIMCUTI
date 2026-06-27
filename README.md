@@ -83,3 +83,4 @@ resources/
 | Kelola departemen & jenis cuti | - | - | Ya |
 | Lihat laporan | - | Ya | Ya |
 | Activity logs | - | - | Ya |
+ 
