@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman index. --}
 @extends('layouts.app')
 
 @section('title', 'Laporan Cuti')
@@ -213,4 +214,4 @@
     </div>
 </section>
 @endsection
-  
+   
