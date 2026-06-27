@@ -84,3 +84,4 @@ resources/
 | Lihat laporan | - | Ya | Ya |
 | Activity logs | - | - | Ya |
  
+ 
