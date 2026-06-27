@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi validasi keamanan captcha.
+
 return [
 
     
@@ -34,4 +36,4 @@ return [
     ],
 
 ];
- 
+  
