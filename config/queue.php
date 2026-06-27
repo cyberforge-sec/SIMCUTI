@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi antrean tugas (queue) yang berjalan di latar belakang.
+
 return [
 
     
@@ -86,4 +88,4 @@ return [
     ],
 
 ];
- 
+  
