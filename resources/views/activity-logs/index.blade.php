@@ -230,3 +230,4 @@ function resetFilters() {
 document.addEventListener('DOMContentLoaded', loadLogs);
 </script>
 @endpush
+ 
