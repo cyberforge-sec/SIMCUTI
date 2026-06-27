@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi sistem penyimpanan file lokal dan cloud (storage).
+
 return [
 
     
@@ -49,4 +51,4 @@ return [
     ],
 
 ];
- 
+  
