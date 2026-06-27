@@ -74,3 +74,4 @@ class ActivityLogController extends Controller
         ]);
     }
 }
+ 
