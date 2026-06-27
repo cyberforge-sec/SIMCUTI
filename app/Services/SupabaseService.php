@@ -667,9 +667,21 @@ class SupabaseService
         foreach ($filters as $col => $val) {
             if (is_array($val)) {
                 $query[$col] = 'in.(' . implode(',', $val) . ')';
-            } else {
-                $query[$col] = 'eq.' . $val;
+                continue;
             }
+
+            if ($val === null) {
+                $query[$col] = 'is.null';
+                continue;
+            }
+
+            $value = (string) $val;
+            if (preg_match('/^(eq|neq|gt|gte|lt|lte|like|ilike|in|is|not|cs|cd|ov|sl|sr|nxr|nxl|adj|fts|plfts|phfts|wfts)\./', $value)) {
+                $query[$col] = $value;
+                continue;
+            }
+
+            $query[$col] = 'eq.' . $value;
         }
         return $query;
     }
