@@ -15,7 +15,7 @@
                 <span class="material-symbols-outlined-square me-2">edit</span> Form Edit Pengajuan
             </div>
             <div class="card-body">
-                <form action="{{ route('leave.update', $leave['id']) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('leave.update', $leave['id']) }}" method="POST" enctype="multipart/form-data" id="editLeaveForm">
                     @csrf
                     @method('PUT')
 
@@ -48,7 +48,7 @@
 
                     <div class="mb-4">
                         <label for="alasan" class="form-label">Alasan Cuti</label>
-                        <textarea class="form-control @error('alasan') is-invalid @enderror" id="alasan" name="alasan" rows="4" required minlength="20">{{ old('alasan', $leave['alasan'] ?? '') }}</textarea>
+                        <textarea class="form-control @error('alasan') is-invalid @enderror" id="alasan" name="alasan" rows="4">{{ old('alasan', $leave['alasan'] ?? '') }}</textarea>
                         @error('alasan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -71,4 +71,21 @@
         </div>
     </div>
 </div>
+@push('scripts')
+<script>
+    document.getElementById('editLeaveForm').addEventListener('submit', function(e) {
+        const alasan = document.getElementById('alasan').value.trim();
+        if (alasan.length === 0) {
+            e.preventDefault();
+            Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Alasan cuti wajib diisi.' });
+            return false;
+        }
+        if (alasan.length < 20) {
+            e.preventDefault();
+            Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Alasan pengajuan cuti minimal 20 karakter.' });
+            return false;
+        }
+    });
+</script>
+@endpush
 @endsection

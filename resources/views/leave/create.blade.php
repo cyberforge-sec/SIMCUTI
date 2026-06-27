@@ -94,9 +94,7 @@
                         </label>
                         <textarea id="alasan" name="alasan" rows="4"
                                   placeholder="Jelaskan alasan Anda mengajukan cuti..."
-                                  minlength="20"
-                                  class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm resize-none"
-                                  required></textarea>
+                                  class="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm resize-none"></textarea>
                         <p class="mt-xs text-label-sm font-label-sm text-secondary">Minimal 20 karakter. Jelaskan dengan jelas alasan pengajuan cuti.</p>
                     </div>
 
@@ -341,6 +339,18 @@
         if (totalDays === 0) {
             e.preventDefault();
             Swal.fire({ icon: 'error', title: 'Error', text: 'Pilih tanggal mulai dan selesai yang valid' });
+            return false;
+        }
+
+        const alasan = document.getElementById('alasan').value.trim();
+        if (alasan.length === 0) {
+            e.preventDefault();
+            Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Alasan cuti wajib diisi.' });
+            return false;
+        }
+        if (alasan.length < 20) {
+            e.preventDefault();
+            Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Alasan pengajuan cuti minimal 20 karakter.' });
             return false;
         }
 
