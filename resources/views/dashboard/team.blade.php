@@ -171,3 +171,4 @@ if (searchInput && tableRows.length) {
 </script>
 @endpush
 @endsection
+ 
