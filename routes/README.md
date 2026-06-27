@@ -1,3 +1,3 @@
 # routes
 
-Folder ini untuk mendaftarkan semua rute URL (link) pada aplikasi.
+Tempat mengatur seluruh tautan URL (rute) aplikasi
