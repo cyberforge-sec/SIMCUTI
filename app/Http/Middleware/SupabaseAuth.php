@@ -84,7 +84,7 @@ class SupabaseAuth
         }
         Session::put('profile_photo_url', $photoUrl);
 
-        // Check if 2FA is enabled for this user (respects profile setting)
+        // Cek jika fitur 2FA aktif untuk user ini (sesuai profil)
         $twoFactorEnabled = $profile['two_factor_enabled'] ?? false;
         Session::put('2fa_required', $twoFactorEnabled);
         Session::put('2fa_verified', !$twoFactorEnabled);

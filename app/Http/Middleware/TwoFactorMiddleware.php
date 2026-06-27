@@ -26,7 +26,7 @@ class TwoFactorMiddleware
         }
 
         // Server-side validation: check 2FA verification timestamp
-        // Prevents session manipulation where attacker sets 2fa_verified=true
+        // Mencegah manipulasi sesi
         if (Session::get('2fa_verified')) {
             $verifiedAt = Session::get('2fa_verified_at');
 
@@ -39,7 +39,7 @@ class TwoFactorMiddleware
                 return redirect()->route('2fa.show');
             }
 
-            // Check if 2FA verification has expired
+            // Cek apabila verifikasi 2FA sudah kedaluwarsa
             $minutesSinceVerification = now()->diffInMinutes($verifiedAt);
             if ($minutesSinceVerification > self::TWO_FA_MAX_AGE_MINUTES) {
                 Session::put('2fa_verified', false);

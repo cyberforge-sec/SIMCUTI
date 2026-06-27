@@ -11,9 +11,9 @@ use Illuminate\Support\Str;
 class LeaveRequestController extends Controller
 {
     /**
-     * Maximum allowed image dimensions in pixels (width × height).
-     * Prevents "image bomb" / memory exhaustion attacks via GD library.
-     * 50 megapixels covers all practical use cases (8K = ~33MP).
+     * Batas dimensi gambar dalam pixel (lebar × tinggi).
+     * Mencegah eksploitasi memori (image bomb) lewat pustaka GD.
+     * Batas 50 megapixel sudah cukup untuk semua penggunaan standar.
      */
     protected const MAX_IMAGE_PIXELS = 50_000_000;
 
@@ -127,8 +127,8 @@ class LeaveRequestController extends Controller
             return back()->withErrors(['error' => "Total hari melebihi batas maksimal ({$leaveType['max_hari_per_pengajuan']} hari)."])->withInput();
         }
 
-        // Overlap detection: check if user already has leave in this date range
-        // Note: Database trigger also enforces this, but we check early for better UX
+        // Deteksi tabrakan: cek apakah user sudah ada cuti di rentang tanggal ini
+        // Catatan: Trigger database juga mengecek hal ini, namun kita cek di awal agar UX lebih baik
         // Cek jika pengajuan cuti bertabrakan dengan tanggal cuti yang sudah ada
         $existingLeaves = $this->supabase->selectAdvanced('leave_requests', [
             'columns' => 'id,tanggal_mulai,tanggal_selesai,status',
@@ -143,13 +143,13 @@ class LeaveRequestController extends Controller
             }
         }
 
-        // Handle file upload
+        // Menangani proses upload file
         // Proses upload file lampiran jika ada
         $lampiranUrl = null;
         if ($request->hasFile('lampiran')) {
             $file = $request->file('lampiran');
 
-            // File validation (magic bytes)
+            // Validasi file (magic bytes)
             // Validasi jenis file (PDF atau gambar)
             $validMimes = ['application/pdf', 'image/jpeg', 'image/png'];
             if (!in_array($file->getMimeType(), $validMimes)) {
@@ -359,13 +359,13 @@ class LeaveRequestController extends Controller
         $oldLeave = $this->supabase->selectSingle('leave_requests', 'id', $id, 'lampiran_url');
         $oldLampiranUrl = $oldLeave['lampiran_url'] ?? null;
 
-        // Handle file upload (same as store())
+        // Menangani proses upload file (sama seperti store())
         // Proses upload file lampiran baru jika ada
         $lampiranUrl = null;
         if ($request->hasFile('lampiran')) {
             $file = $request->file('lampiran');
 
-            // File validation (magic bytes)
+            // Validasi file (magic bytes)
             // Validasi jenis file
             $validMimes = ['application/pdf', 'image/jpeg', 'image/png'];
             if (!in_array($file->getMimeType(), $validMimes)) {

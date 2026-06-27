@@ -46,7 +46,7 @@ class ActivityLogService
 
     /**
      * Cleanup activity logs older than 90 days via Supabase RPC.
-     * Prevents unbounded table growth over time.
+     * Mencegah tabel membengkak seiring waktu.
      */
     public function cleanupOldLogs(): void
     {

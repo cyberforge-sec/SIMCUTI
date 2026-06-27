@@ -70,8 +70,8 @@ class ProfileController extends Controller
     }
 
     /**
-     * Maximum allowed image dimensions in pixels (width × height).
-     * Prevents "image bomb" / memory exhaustion attacks via GD library.
+     * Batas dimensi gambar dalam pixel (lebar × tinggi).
+     * Mencegah eksploitasi memori (image bomb) lewat pustaka GD.
      */
     protected const MAX_IMAGE_PIXELS = 50_000_000;
 

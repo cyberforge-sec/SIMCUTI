@@ -192,7 +192,7 @@ class CaptchaService
 
     /**
      * Bulk cleanup all expired captcha sessions via Supabase RPC.
-     * Prevents unbounded table growth from repeated page loads.
+     * Mencegah tabel Captcha membengkak akibat load berulang.
      */
     public function cleanupExpired(): void
     {
@@ -205,7 +205,7 @@ class CaptchaService
 
     /**
      * Get captcha record using service role key (bypasses RLS)
-     * This is needed because during login/register, the user is not authenticated yet
+     * Diperlukan karena user belum terautentikasi saat proses login/register.
      */
     protected function getCaptchaRecord(string $sessionKey): array
     {
