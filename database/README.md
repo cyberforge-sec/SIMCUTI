@@ -1,3 +1,3 @@
 # database
 
-Folder ini untuk menyimpan file migrasi struktur tabel dan data awal (seeder).
+Menyimpan struktur tabel dan data bawaan
