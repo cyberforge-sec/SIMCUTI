@@ -1,3 +1,3 @@
 # config
 
-Folder ini untuk menyimpan semua pengaturan konfigurasi sistem.
+Menyimpan seluruh pengaturan dasar sistem
