@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman index. --}
 @extends('layouts.app')
 
 @section('title', 'Notifikasi')
@@ -71,4 +72,4 @@ function markRead(id) {
 }
 </script>
 @endpush
-  
+   
