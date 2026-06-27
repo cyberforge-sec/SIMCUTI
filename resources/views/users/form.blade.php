@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman form. --}
 @extends('layouts.app')
 
 @section('title', isset($user) ? 'Edit Pengguna' : 'Tambah Pengguna')
@@ -136,4 +137,4 @@
     </section>
 </div>
 @endsection
-  
+   
