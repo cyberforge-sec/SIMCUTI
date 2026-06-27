@@ -112,3 +112,4 @@ class SettingsController extends Controller
         return back()->withErrors(['error' => 'Gagal mengubah password: ' . ($result['error'] ?? '')]);
     }
 }
+ 
