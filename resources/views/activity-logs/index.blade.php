@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman index. --}
 @extends('layouts.app')
 
 @section('title', 'Activity Logs')
@@ -230,4 +231,4 @@ function resetFilters() {
 document.addEventListener('DOMContentLoaded', loadLogs);
 </script>
 @endpush
-  
+   
