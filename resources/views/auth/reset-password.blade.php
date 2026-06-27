@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman reset-password. --}
 @extends('layouts.auth')
 
 @section('title', 'Reset Password')
@@ -74,4 +75,4 @@
     </p>
 </div>
 @endsection
-  
+   
