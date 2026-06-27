@@ -92,3 +92,4 @@ $$ LANGUAGE plpgsql;
 SELECT proname, prosrc
 FROM pg_proc
 WHERE proname IN ('update_leave_balance_on_approval', 'restore_leave_balance_on_cancel');
+ 
