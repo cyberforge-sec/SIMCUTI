@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman login. --}
 @extends('layouts.auth')
 
 @section('title', 'Login')
@@ -143,4 +144,4 @@
     });
 </script>
 @endpush
-  
+   
