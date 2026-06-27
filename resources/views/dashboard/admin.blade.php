@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman admin. --}
 <!-- Page Title Section -->
 <div class="mb-lg">
     <h2 class="text-headline-lg font-headline-lg text-on-background">Ringkasan Dashboard</h2>
@@ -141,4 +142,4 @@
         card.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease';
     });
 </script>
-  
+   
