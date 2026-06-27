@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi layanan pengiriman email (SMTP).
+
 return [
 
     
@@ -80,4 +82,4 @@ return [
     ],
 
 ];
- 
+  
