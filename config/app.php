@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi utama aplikasi seperti zona waktu, bahasa, dan penyedia layanan.
+
 return [
 
     
@@ -50,4 +52,4 @@ return [
     ],
 
 ];
- 
+  
