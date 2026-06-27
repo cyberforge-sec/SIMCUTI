@@ -1,5 +1,7 @@
 <?php
 
+// Konfigurasi sistem autentikasi dan otorisasi pengguna.
+
 return [
 
     'defaults' => [
@@ -32,4 +34,4 @@ return [
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
 ];
- 
+  
