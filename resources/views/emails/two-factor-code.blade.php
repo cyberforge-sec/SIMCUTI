@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman two-factor-code. --}
 <!DOCTYPE html>
 <html>
 <head>
@@ -47,4 +48,4 @@
     </table>
 </body>
 </html>
-  
+   
