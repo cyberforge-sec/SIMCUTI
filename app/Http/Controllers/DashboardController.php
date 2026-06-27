@@ -367,4 +367,4 @@ class DashboardController extends Controller
         return ['labels' => $labels, 'data' => $data];
     }
 }
- 
+  
