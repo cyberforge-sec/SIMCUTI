@@ -1,3 +1,4 @@
+{-- Tampilan antarmuka (UI) halaman manager. --}
 <!-- Welcome Header -->
 <section class="flex flex-col gap-xs">
     <h2 class="font-headline-lg text-headline-lg text-on-surface">Selamat datang kembali, {{ session('user_name') }}.</h2>
@@ -278,4 +279,4 @@
     }
 </script>
 @endpush
-  
+   
