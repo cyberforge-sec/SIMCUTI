@@ -1,5 +1,7 @@
 <?php
 
+// File pendukung untuk TwoFactorCodeMail.php.
+
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
@@ -35,4 +37,4 @@ class TwoFactorCodeMail extends Mailable
         );
     }
 }
-  
+   
