@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman register. --}
+{{-- Tampilan antarmuka (UI) halaman register. --}}
 @extends('layouts.auth')
 
 @section('title', 'Registrasi')

@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman create. --}
+{{-- Tampilan antarmuka (UI) halaman create. --}}
 @extends('layouts.app')
 
 @section('title', 'Ajukan Cuti Baru')

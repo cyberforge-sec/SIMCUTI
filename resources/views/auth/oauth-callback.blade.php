@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman oauth-callback. --}
+{{-- Tampilan antarmuka (UI) halaman oauth-callback. --}}
 <!DOCTYPE html>
 <html class="light" lang="id">
 <head>

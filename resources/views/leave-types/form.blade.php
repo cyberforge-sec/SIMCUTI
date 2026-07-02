@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman form. --}
+{{-- Tampilan antarmuka (UI) halaman form. --}}
 @extends('layouts.app')
 
 @section('title', isset($leaveType) ? 'Edit Jenis Cuti' : 'Tambah Jenis Cuti')

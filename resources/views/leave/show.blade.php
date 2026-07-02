@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman show. --}
+{{-- Tampilan antarmuka (UI) halaman show. --}}
 @extends('layouts.app')
 
 @section('title', 'Detail Pengajuan Cuti')

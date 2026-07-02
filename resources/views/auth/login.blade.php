@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman login. --}
+{{-- Tampilan antarmuka (UI) halaman login. --}}
 @extends('layouts.auth')
 
 @section('title', 'Login')

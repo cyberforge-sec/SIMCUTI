@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman employee-requests. --}
+{{-- Tampilan antarmuka (UI) halaman employee-requests. --}}
 @extends('layouts.app')
 
 @section('title', 'Pengajuan Karyawan')

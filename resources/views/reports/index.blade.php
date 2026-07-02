@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman index. --}
+{{-- Tampilan antarmuka (UI) halaman index. --}}
 @extends('layouts.app')
 
 @section('title', 'Laporan Cuti')

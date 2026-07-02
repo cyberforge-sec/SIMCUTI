@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman app. --}
+{{-- Tampilan antarmuka (UI) halaman app. --}}
 <!DOCTYPE html>
 <html class="light" lang="id">
 <head>

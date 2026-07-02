@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman team. --}
+{{-- Tampilan antarmuka (UI) halaman team. --}}
 @extends('layouts.app')
 
 @section('title', 'Anggota Tim')

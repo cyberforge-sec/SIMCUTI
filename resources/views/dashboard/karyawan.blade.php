@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman karyawan. --}
+{{-- Tampilan antarmuka (UI) halaman karyawan. --}}
 @extends('layouts.app')
 
 @section('title', 'Dashboard')

@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman two-factor-code. --}
+{{-- Tampilan antarmuka (UI) halaman two-factor-code. --}}
 <!DOCTYPE html>
 <html>
 <head>

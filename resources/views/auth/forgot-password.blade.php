@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman forgot-password. --}
+{{-- Tampilan antarmuka (UI) halaman forgot-password. --}}
 @extends('layouts.auth')
 
 @section('title', 'Lupa Password')

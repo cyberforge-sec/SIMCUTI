@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman two-factor. --}
+{{-- Tampilan antarmuka (UI) halaman two-factor. --}}
 @extends('layouts.auth')
 
 @section('title', 'Verifikasi 2FA')

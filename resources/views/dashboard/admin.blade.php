@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman admin. --}
+{{-- Tampilan antarmuka (UI) halaman admin. --}}
 <!-- Page Title Section -->
 <div class="mb-lg">
     <h2 class="text-headline-lg font-headline-lg text-on-background">Ringkasan Dashboard</h2>

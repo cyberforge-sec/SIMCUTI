@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman auth. --}
+{{-- Tampilan antarmuka (UI) halaman auth. --}}
 <!DOCTYPE html>
 <html class="light" lang="id">
 <head>

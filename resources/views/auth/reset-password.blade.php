@@ -1,4 +1,4 @@
-{-- Tampilan antarmuka (UI) halaman reset-password. --}
+{{-- Tampilan antarmuka (UI) halaman reset-password. --}}
 @extends('layouts.auth')
 
 @section('title', 'Reset Password')
