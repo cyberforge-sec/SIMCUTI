@@ -83,6 +83,10 @@ resources/
 | Kelola departemen & jenis cuti | - | - | Ya |
 | Lihat laporan | - | Ya | Ya |
 | Activity logs | - | - | Ya |
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE) for details.
  
  
  
