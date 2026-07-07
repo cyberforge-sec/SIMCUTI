@@ -87,6 +87,8 @@ resources/
 ## 📄 License
 
 MIT — see [LICENSE](LICENSE) for details.
+
+> 💡 **Panduan setup lengkap ada di [SETUP.md](SETUP.md).**
  
  
  
