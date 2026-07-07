@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - SIMCUTI</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/favicon.svg') }}">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>

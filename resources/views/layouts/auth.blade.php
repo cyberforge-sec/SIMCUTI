@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Login') - SIMCUTI</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/favicon.svg') }}">
 
     <script>
         (function(){var w=console.warn;console.warn=function(){if(arguments.length&&typeof arguments[0]==='string'&&arguments[0].indexOf('cdn.tailwindcss.com')>-1)return;return w.apply(console,arguments);};})();
