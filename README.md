@@ -43,8 +43,8 @@ php artisan key:generate
 # Konfigurasi .env dengan credentials Supabase Anda
 # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY, dll.
 
-# Jalankan database migration di Supabase SQL Editor
-# (lihat file database/supabase.sql)
+# Jalankan SQL migration di Supabase SQL Editor
+# (lihat file database/fix_rls_recursion.sql dan database/fix_ctg_triggers.sql)
 
 # Build asset
 npm run build
